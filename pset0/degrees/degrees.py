@@ -125,9 +125,17 @@ def shortest_path(source, target):
                 node - node.parent
             movie_path.reverse()
             person_relate.reverse()
-            return #list of dictionary with movie and star name
+            solution = {}
+            solutions = []
+            
+            for i in range(len(person_relate)):
+                solution["title"] = movie_path[i]
+                solution["name"] = person_relate[i]
+                solutions.append(solution)
         
+            return solutions
         
+        explored.add(node.state)
 
     
     raise NotImplementedError
