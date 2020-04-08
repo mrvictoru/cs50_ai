@@ -119,7 +119,7 @@ def shortest_path(source, target):
         if node.state == target:
             movie_path = []
             person_relate = []
-            # this condiditon at the moment do not include the source person...
+
             while node.parent is not None:
                 movie_path.append(node.action)
                 person_relate.append(node.state)
@@ -128,11 +128,9 @@ def shortest_path(source, target):
             person_relate.reverse()
             
             solutions = []
-            solution = {}
-
+            
             for i in range(len(movie_path)):
-                solution["title"] = movie_path[i]
-                solution["name"] = person_relate[i]
+                solution = (movie_path[i],person_relate[i])
                 solutions.append(solution)
 
             return solutions
