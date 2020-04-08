@@ -21,7 +21,17 @@ def initial_state():
 def player(board):
     """
     Returns player who has the next turn on a board.
+
     """
+    # check if empty board, return X
+
+
+    # check if full board, return X
+
+
+    # check if number of X is more than 0, return 0, else return X
+
+        
     raise NotImplementedError
 
 
@@ -29,6 +39,9 @@ def actions(board):
     """
     Returns set of all possible actions (i, j) available on the board.
     """
+    # loop through board to check if empty
+    # remember empty spot and return the list
+
     raise NotImplementedError
 
 
