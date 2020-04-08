@@ -119,6 +119,7 @@ def shortest_path(source, target):
         if node.state == target:
             movie_path = []
             person_relate = []
+            # this condiditon at the moment do not include the source person...
             while node.parent is not None:
                 movie_path.append(node.action)
                 person_relate.append(node.state)
@@ -145,6 +146,7 @@ def shortest_path(source, target):
             if not frontier.contains_state(state) and state not in explored:
                 child = Node(state=state, parent=node,action=action)
                 frontier.add(child)
+    
     
 
 
