@@ -122,15 +122,30 @@ def shortest_path(source, target):
             while node.parent is not None:
                 movie_path.append(node.action)
                 person_relate.append(node.state)
-                node - node.parent
+                node = node.parent
             movie_path.reverse()
             person_relate.reverse()
-            return #list of dictionary with movie and star name
-        
-        
+            
+            solutions = []
+            solution = {}
 
+            for i in range(len(movie_path)):
+                solution["title"] = movie_path[i]
+                solution["name"] = person_relate[i]
+                solutions.append(solution)
+
+            return solutions
+            #list of dictionary with movie and star name
+        
+        # Mark node as explored
+        explored.add(node.state)
+            
+        # Add neighbors to frontier
+        for action, state in neighbors_for_person(node.state):
+            if not frontier.contains_state(state) and state not in explored:
+                child = Node(state=state, parent=node,action=action)
+                frontier.add(child)
     
-    raise NotImplementedError
 
 
 def person_id_for_name(name):
