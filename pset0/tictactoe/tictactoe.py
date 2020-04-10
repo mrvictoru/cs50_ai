@@ -23,26 +23,44 @@ def player(board):
     Returns player who has the next turn on a board.
 
     """
+    emp = True
+    numx = 0
+    num0 = 0
+    
+    # loop through board to count number of X and O
+    for cell in board:
+        if cell is not EMPTY:
+            if cell is X:
+                numx += 1
+            else:
+                num0 += 1
+            emp = False
+    
     # check if empty board, return X
-
-
-    # check if full board, return X
-
+    if emp is True:
+        return X
 
     # check if number of X is more than 0, return 0, else return X
-
-        
-    raise NotImplementedError
+    elif numx > num0:
+        return O
+    else:
+        return X
 
 
 def actions(board):
     """
     Returns set of all possible actions (i, j) available on the board.
     """
+    actions = []
     # loop through board to check if empty
-    # remember empty spot and return the list
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] is EMPTY:
+                # remember empty spot and return the list
+                actions.append((i,j))
+    
+    return actions
 
-    raise NotImplementedError
 
 
 def result(board, action):
