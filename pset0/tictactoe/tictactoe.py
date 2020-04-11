@@ -75,8 +75,9 @@ def result(board, action):
     # look into the board directly and change the board for the given player
     else:
         result[action(1)][action(2)] = move
+        return result
     
-    return result
+    
 
 
 def winner(board):
@@ -96,12 +97,17 @@ def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-
+    full = True
     # check if winner return true
-
+    if winner is not None:
+        return True
     # else loop through board to check if no empty slot
+    else:
+        for cell in board:
+            if cell is EMPTY:
+                full = False
 
-    raise NotImplementedError
+    return full
 
 
 def utility(board):
