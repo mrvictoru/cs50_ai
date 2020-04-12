@@ -84,13 +84,21 @@ def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-
+    win_set = []
+    
     # check if any player fit winning siutation: 
     # (1,1 1,2 1,3) or (2,1 2,2 2,3) or (3,1 3,2 3,3) or (1,1 2,1 3,1) or (1,2 2,2 3,3) or (1,3 2,3 3,3) or (1,1 2,2 3,3) or (1,3 2,2 3,1)
+    winning = {[(1,1),(1,2),(1,3)], [(2,1),(2,2),(2,3)], [(3,1),(3,2),(3,3)], [(1,1),(2,1),(3,1)], [(1,2),(2,2),(3,2)], [(1,3),(2,3),(3,3)], [(1,3),(2,2),(3,1)]}
 
+    for win in winning:
 
+        for cell in win:
+            win_set.append(board[cell(1)][cell(2)])
 
-    raise NotImplementedError
+        if all(win_set):
+            return True
+    
+    return False
 
 
 def terminal(board):
