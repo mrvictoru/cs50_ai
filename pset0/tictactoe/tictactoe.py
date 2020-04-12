@@ -141,7 +141,9 @@ def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
+
     # user player(board) to check turn
+
     # if terminal true
     #   return utility
     # moves = available moves for game (actions)
@@ -153,5 +155,9 @@ def minimax(board):
     #   value = infinty
     #   for move in moves:
     #       value = min(value,minimax(move))
+
+    # if terminal board, return nothing
+    if terminal(board):
+        return None
 
     raise NotImplementedError
