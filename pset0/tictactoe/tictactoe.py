@@ -86,19 +86,23 @@ def winner(board):
     """
     win_set = []
     
-    # check if any player fit winning siutation: 
+    # winning siutation: 
     # (1,1 1,2 1,3) or (2,1 2,2 2,3) or (3,1 3,2 3,3) or (1,1 2,1 3,1) or (1,2 2,2 3,3) or (1,3 2,3 3,3) or (1,1 2,2 3,3) or (1,3 2,2 3,1)
     winning = {[(1,1),(1,2),(1,3)], [(2,1),(2,2),(2,3)], [(3,1),(3,2),(3,3)], [(1,1),(2,1),(3,1)], [(1,2),(2,2),(3,2)], [(1,3),(2,3),(3,3)], [(1,3),(2,2),(3,1)]}
 
     for win in winning:
-
+        # check whether there is a winning situation
         for cell in win:
             win_set.append(board[cell(1)][cell(2)])
 
         if all(win_set):
-            return True
+            # check which player fit the winning siutation
+            if win_set[0] is X:
+                return X
+            else:
+                return O
     
-    return False
+    return None
 
 
 def terminal(board):
@@ -124,8 +128,13 @@ def utility(board):
     """
 
     # use the same logic as winner
+    if winner(board) is X:
+        return 1
+    elif winner(board) is O:
+        return -1
+    else:
+        return 0
 
-    raise NotImplementedError
 
 
 def minimax(board):
