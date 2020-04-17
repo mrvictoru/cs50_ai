@@ -91,7 +91,7 @@ def winner(board):
     
     # winning siutation: 
     # (1,1 1,2 1,3) or (2,1 2,2 2,3) or (3,1 3,2 3,3) or (1,1 2,1 3,1) or (1,2 2,2 3,3) or (1,3 2,3 3,3) or (1,1 2,2 3,3) or (1,3 2,2 3,1)
-    winning = [[[1,1],[1,2],[1,3]], [[2,1],[2,2],[2,3]], [[3,1],[3,2],[3,3]], [[1,1],[2,1],[3,1]], [[1,2],[2,2],[3,2]], [[1,3],[2,3],[3,3]], [[1,3],[2,2],[3,1]]]
+    winning = [[[1,1],[1,2],[1,3]], [[2,1],[2,2],[2,3]], [[3,1],[3,2],[3,3]], [[1,1],[2,1],[3,1]], [[1,2],[2,2],[3,2]], [[1,3],[2,3],[3,3]], [[1,1],[2,2],[3,3]], [[1,3],[2,2],[3,1]]]
 
     for win in winning:
         # check whether there is a winning situation
@@ -105,7 +105,7 @@ def winner(board):
             # check which player fit the winning siutation
             if win_set[0] is X:
                 return X
-            else:
+            elif win_set[0] is O:
                 return O
     
     return None
@@ -119,6 +119,8 @@ def terminal(board):
     # check if winner return true
     if winner is None:
         return False
+    elif winner(board) is X or winner(board) is O:
+        return True
     # else loop through board to check if no empty slot
     else:
         for rolls in board:
@@ -156,19 +158,22 @@ def minimax(board):
     if terminal(board):
         return None
     
+    # best starting position is the middle block
+    if empty(board):
+        return [1,1]
+    
     moves = actions(board)
     best_move = None
 
     # find value for a given move
-
     if turn is X:
         best_value = -math.inf
         for move in moves:
-            value = minimax_value(result(board,move), 0)
+            value = minimax_value(result(board,move), O)
             if value > best_value:
                 best_value = value
                 best_move = move
-    else:
+    elif turn is O:
         best_value = math.inf
         for move in moves:
             value = minimax_value(result(board,move), X)
@@ -191,9 +196,19 @@ def minimax_value(board,turn):
         for move in moves:
             value = max(value, minimax_value(result(board,move), O))
     
-    else:
+    elif turn is O:
         value = math.inf
         for move in moves:
             value = min(value, minimax_value(result(board,move), X))
     
     return value
+
+def empty(board):
+    # check if the board is empty
+    emp = True
+    for rolls in board:
+            for cell in rolls:
+                if cell is not EMPTY:
+                    emp = False
+    
+    return emp
