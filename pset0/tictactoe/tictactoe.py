@@ -68,6 +68,9 @@ def result(board, action):
     """
     Returns the board that results from making move (i, j) on the board.
     """
+    if action is None:
+        return board
+    
     move = player(board)
     result = copy.deepcopy(board)
     # check for invalid action
@@ -85,7 +88,6 @@ def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-    win_set = []
     
     # winning siutation: 
     # (1,1 1,2 1,3) or (2,1 2,2 2,3) or (3,1 3,2 3,3) or (1,1 2,1 3,1) or (1,2 2,2 3,3) or (1,3 2,3 3,3) or (1,1 2,2 3,3) or (1,3 2,2 3,1)
@@ -93,11 +95,13 @@ def winner(board):
 
     for win in winning:
         # check whether there is a winning situation
+        win_set = []
         for cell in win:
             
             win_set.append(board[cell[0]-1][cell[1]-1])
-
-        if all(win_set):
+            
+        check = all(x == win_set[0] for x in win_set)
+        if check:
             # check which player fit the winning siutation
             if win_set[0] is X:
                 return X
@@ -148,21 +152,48 @@ def minimax(board):
     # user player(board) to check turn
     turn = player(board)
 
-    # if terminal board, return utility
+    # if terminal board, return None
     if terminal(board):
         return None
     
     moves = actions(board)
+    best_move = None
 
-    # find value recursively
-    # missing the last stage of recursion
+    # find value for a given move
+
+    if turn is X:
+        best_value = -math.inf
+        for move in moves:
+            value = minimax_value(result(board,move), 0)
+            if value > best_value:
+                best_value = value
+                best_move = move
+    else:
+        best_value = math.inf
+        for move in moves:
+            value = minimax_value(result(board,move), X)
+            if value < best_value:
+                best_value = value
+                best_move = move
+    
+    return best_move
+    
+
+def minimax_value(board,turn):
+    # finding score for given board using minimax recursively
+    if terminal(board):
+        return utility(board)
+    
+    moves = actions(board)
+
     if turn is X:
         value = -math.inf
         for move in moves:
-            value = max(value,minimax(result(board,move)))
+            value = max(value, minimax_value(result(board,move), O))
+    
     else:
         value = math.inf
         for move in moves:
-            value = min(value,minimax(result(board,move)))
+            value = min(value, minimax_value(result(board,move), X))
     
     return value
