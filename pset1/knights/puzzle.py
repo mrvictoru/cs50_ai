@@ -14,8 +14,8 @@ CKnave = Symbol("C is a Knave")
 knowledge0 = And(
     Or(AKnight, AKnave), Biconditional(AKnave, Not(AKnight)), Biconditional(AKnight, Not(AKnave)),
 
-    Implication(AKnight, AKnave),
-    Implication(AKnave, Not(AKnight)) 
+    Implication(AKnight, And(AKnight,AKnave)),
+    Implication(AKnave, Not(And(AKnight,AKnave))) 
 
 )
 
@@ -38,10 +38,10 @@ knowledge2 = And(
     Or(BKnight, BKnave), Biconditional(BKnave, Not(BKnight)), Biconditional(BKnight, Not(BKnave)),
 
     Implication(AKnight, Or( And( AKnight,BKnight), And( AKnave,BKnave))),
-    Implication(AKnave, Not( Or( And( AKnight,BKnight), And( AKnave,BKnave))),
-    Implication(BKnight, Or( And( AKnight,BKnight), And( AKnave,BKnave))),,
-    Implication(BKnave, Not( Or))
-    # TODO
+    Implication(AKnave, Not( Or( And( AKnight,BKnight), And( AKnave,BKnave)))),
+    Implication(BKnight, Or( And( AKnight,BKnave), And( AKnave,BKnight))),
+    Implication(BKnave, Not( Or( And( AKnight,BKnave), And( AKnave,BKnight))))
+    
 )
 
 # Puzzle 3
@@ -50,6 +50,22 @@ knowledge2 = And(
 # B says "C is a knave."
 # C says "A is a knight."
 knowledge3 = And(
+    Or(AKnight, AKnave), Biconditional(AKnave, Not(AKnight)), Biconditional(AKnight, Not(AKnave)),
+    Or(BKnight, BKnave), Biconditional(BKnave, Not(BKnight)), Biconditional(BKnight, Not(BKnave)),
+    Or(CKnight, CKnave), Biconditional(CKnave, Not(CKnight)), Biconditional(CKnight, Not(CKnave)),
+
+    Implication(AKnight, And( Or(AKnight, AKnave), Biconditional(AKnave, Not(AKnight)), Biconditional(AKnight, Not(AKnave)))),
+    Implication(AKnave, Not( And( Or(AKnight, AKnave), Biconditional(AKnave, Not(AKnight)), Biconditional(AKnight, Not(AKnave))))),
+
+    Implication(BKnight, And( Implication( AKnight,AKnave), Implication( AKnave, Not(AKnave)))), 
+    Implication(BKnave, Not( And( Implication( AKnight,AKnave), Implication( AKnave, Not(AKnave))))),
+
+    Implication(BKnight, CKnave), 
+    Implication(BKnave, Not(CKnave)),
+    
+    Implication(CKnight, AKnight),
+    Implication(CKnave, Not(AKnight))
+
     # TODO
 )
 
