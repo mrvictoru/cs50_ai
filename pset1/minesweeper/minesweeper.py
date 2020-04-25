@@ -193,9 +193,7 @@ class MinesweeperAI():
         self.mark_safe(cell)
         # 3.
 
-        new_sen = Sentence()
-        new_sen.cells.add(cell)
-        new_sen.count = count
+        new_sen = Sentence(cell,count)
 
         self.knowledge.add(new_sen)
         # 4.
