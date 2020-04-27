@@ -224,7 +224,7 @@ class MinesweeperAI():
                 new_cells = nearby_cells.difference(sentence.cells)
                 new_count = count - sentence.count
             new_sen = Sentence(new_cells,new_count)
-            self.knowledge.append(new_new)
+            self.knowledge.append(new_sen)
 
         raise NotImplementedError
 
