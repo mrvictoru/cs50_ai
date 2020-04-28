@@ -250,8 +250,8 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        for i in range(height):
-            for j in range(width):
+        for i in range(self.height):
+            for j in range(self.width):
                 if not (i,j) in self.mines and not(i,j) in self.moves_made:
                     return (i,j)
         
