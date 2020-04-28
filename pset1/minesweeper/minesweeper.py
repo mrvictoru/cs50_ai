@@ -191,12 +191,14 @@ class MinesweeperAI():
         self.moves_made.add(cell)
         # 2.
         self.mark_safe(cell)
-        # 3.
+        # 3. something wrong with the for loop here
         nearby_cells = set()
         for i in [-1, 0, 1]:
             for j in [-1, 0, 1]:
-                if i != 0 and j != 0:
-                    nearby_cells.add((cell[0+i],cell[1+j]))
+                neari = cell[0]+i
+                nearj = cell[1]+j
+                if i != 0 and j != 0 and neari > 0 and nearj > 0 and neari < self.height and nearj < self.width:
+                    nearby_cells.add((neari,nearj))
 
         for cell in nearby_cells:
             if cell in self.mines or cell in self.safes:
@@ -207,25 +209,30 @@ class MinesweeperAI():
         self.knowledge.append(add_sen)
         # 4.
         for sentence in self.knowledge:
-            if not sentence.known_mines in self.mines:
-                for cell in sentence:
-                    self.mark_mine(cell)
-                self.knowledge.remove(sentence)
-            elif not sentence.known_safes in self.safes:
-                for cell in sentence:
-                    self.mark_safe(cell)
-                self.knowledge.remove(sentence)            
+            check_mines = sentence.known_mines()
+            check_safes = sentence.known_safes()
+            if not check_mines is None and not check_safes is None:
+                if not check_mines.issubset(self.mines):
+                    for cell in sentence:
+                        self.mark_mine(cell)
+                    self.knowledge.remove(sentence)
+                elif not check_safes.issubset(self.safes):
+                    for cell in sentence:
+                        self.mark_safe(cell)
+                    self.knowledge.remove(sentence)            
 
         # 5.
         for sentence in self.knowledge:
-            if nearby_cells.issubset(sentence.cells):
+            if nearby_cells.issubset(sentence.cells) and len(nearby_cells)<len(sentence.cells):
                 new_cells = sentence.cells.difference(nearby_cells)
                 new_count = sentence.count - count
+                new_sen = Sentence(new_cells,new_count)
+                self.knowledge.append(new_sen)
             elif sentence.cells.issubset(nearby_cells):
                 new_cells = nearby_cells.difference(sentence.cells)
                 new_count = count - sentence.count
-            new_sen = Sentence(new_cells,new_count)
-            self.knowledge.append(new_sen)
+                new_sen = Sentence(new_cells,new_count)
+                self.knowledge.append(new_sen)
 
 
     def make_safe_move(self):
@@ -250,8 +257,8 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        for i in range(self.height):
-            for j in range(self.width):
-                if not (i,j) in self.mines and not(i,j) in self.moves_made:
-                    return (i,j)
+        while True:
+            ran_move = (random.randint(0,self.height-1),random.randint(0,self.width-1))
+            if not ran_move in self.mines and not ran_move in self.moves_made:
+                return ran_move
         
