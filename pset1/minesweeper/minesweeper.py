@@ -197,7 +197,7 @@ class MinesweeperAI():
             for j in [-1, 0, 1]:
                 neari = cell[0]+i
                 nearj = cell[1]+j
-                if i != 0 and j != 0 and neari > 0 and nearj > 0 and neari < self.height and nearj < self.width:
+                if (i != 0 or j != 0) and neari >= 0 and nearj >= 0 and neari < self.height and nearj < self.width:
                     nearby_cells.add((neari,nearj))
 
         for cell in nearby_cells:
@@ -209,14 +209,20 @@ class MinesweeperAI():
         self.knowledge.append(add_sen)
         # 4.
         for sentence in self.knowledge:
+            
             check_mines = sentence.known_mines()
             check_safes = sentence.known_safes()
+            # check sentence in knowledge figured out known mines or safes
             if not check_mines is None and not check_safes is None:
+                # if sentence known mine isnt already in mines
                 if not check_mines.issubset(self.mines):
+                    # mark cell as mine
                     for cell in sentence:
                         self.mark_mine(cell)
                     self.knowledge.remove(sentence)
+                # if sentence known safe isnt already in safes
                 elif not check_safes.issubset(self.safes):
+                    # mark safes
                     for cell in sentence:
                         self.mark_safe(cell)
                     self.knowledge.remove(sentence)            
@@ -228,7 +234,7 @@ class MinesweeperAI():
                 new_count = sentence.count - count
                 new_sen = Sentence(new_cells,new_count)
                 self.knowledge.append(new_sen)
-            elif sentence.cells.issubset(nearby_cells):
+            elif sentence.cells.issubset(nearby_cells) and len(nearby_cells)>len(sentence.cells):
                 new_cells = nearby_cells.difference(sentence.cells)
                 new_count = count - sentence.count
                 new_sen = Sentence(new_cells,new_count)
