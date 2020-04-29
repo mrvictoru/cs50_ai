@@ -217,37 +217,39 @@ class MinesweeperAI():
                 nearby_cells.remove(cell)
 
         # add new sentence
-        add_sen = Sentence(nearby_cells,count)
-        self.knowledge.append(add_sen)
+        if nearby_cells is not None:
+            add_sen = Sentence(nearby_cells,count)
+            self.knowledge.append(add_sen)
 
         # 4.
         copy1 = self.knowledge.copy()
         for sentence in copy1:
-
+            sen_copy = sentence.cells.copy()
             # remove empty sentence
-            if sentence.cells is None:
+            if sen_copy is None:
                 self.knowledge.remove(sentence)
                 continue
             
             check_mines = sentence.known_mines()
             check_safes = sentence.known_safes()
 
-            # check sentence in knowledge figured out known mines or safes
-            if not check_mines is None and not check_safes is None:
+            if not check_mines is None:
 
                 # if sentence known mine isnt already in mines
                 if not check_mines.issubset(self.mines):
-
+                    
                     # mark cell as mine
-                    for cell in sentence:
+                    for cell in sen_copy:
                         self.mark_mine(cell)
                     self.knowledge.remove(sentence)
+            
+            if not check_safes is None:
 
                 # if sentence known safe isnt already in safes
-                elif not check_safes.issubset(self.safes):
-
+                if not check_safes.issubset(self.safes):
+                    
                     # mark safes
-                    for cell in sentence:
+                    for cell in sen_copy:
                         self.mark_safe(cell)
                     self.knowledge.remove(sentence)            
 
