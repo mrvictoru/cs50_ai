@@ -120,16 +120,18 @@ class Sentence():
         Updates internal knowledge representation given the fact that
         a cell is known to be a mine.
         """
-        self.count -= 1
-        self.cells.remove(cell)
+        if cell in self.cells:
+            self.count -= 1
+            self.cells.remove(cell)
         
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
-        self.count -= 1
-        self.cells.remove(cell)
+        if cell in self.cells:
+            self.cells.remove(cell)
+        
 
 
 
@@ -187,58 +189,88 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
+
         # 1.
         self.moves_made.add(cell)
+
         # 2.
         self.mark_safe(cell)
-        # 3. something wrong with the for loop here
+
+        # 3. 
         nearby_cells = set()
         for i in [-1, 0, 1]:
             for j in [-1, 0, 1]:
                 neari = cell[0]+i
                 nearj = cell[1]+j
+
+                # find near by cells
                 if (i != 0 or j != 0) and neari >= 0 and nearj >= 0 and neari < self.height and nearj < self.width:
                     nearby_cells.add((neari,nearj))
+        check_set = nearby_cells.copy()
 
-        for cell in nearby_cells:
-            if cell in self.mines or cell in self.safes:
+        # remove cell that is already known to be mine or safe and update count
+        for cell in check_set:
+            if cell in self.mines:
                 count -= 1
                 nearby_cells.remove(cell)
-        
+            if cell in self.safes:
+                nearby_cells.remove(cell)
+
+        # add new sentence
         add_sen = Sentence(nearby_cells,count)
         self.knowledge.append(add_sen)
+
         # 4.
-        for sentence in self.knowledge:
+        copy1 = self.knowledge.copy()
+        for sentence in copy1:
+
+            # remove empty sentence
+            if sentence.cells is None:
+                self.knowledge.remove(sentence)
+                continue
             
             check_mines = sentence.known_mines()
             check_safes = sentence.known_safes()
+
             # check sentence in knowledge figured out known mines or safes
             if not check_mines is None and not check_safes is None:
+
                 # if sentence known mine isnt already in mines
                 if not check_mines.issubset(self.mines):
+
                     # mark cell as mine
                     for cell in sentence:
                         self.mark_mine(cell)
                     self.knowledge.remove(sentence)
+
                 # if sentence known safe isnt already in safes
                 elif not check_safes.issubset(self.safes):
+
                     # mark safes
                     for cell in sentence:
                         self.mark_safe(cell)
                     self.knowledge.remove(sentence)            
 
         # 5.
-        for sentence in self.knowledge:
-            if nearby_cells.issubset(sentence.cells) and len(nearby_cells)<len(sentence.cells):
-                new_cells = sentence.cells.difference(nearby_cells)
-                new_count = sentence.count - count
-                new_sen = Sentence(new_cells,new_count)
-                self.knowledge.append(new_sen)
-            elif sentence.cells.issubset(nearby_cells) and len(nearby_cells)>len(sentence.cells):
-                new_cells = nearby_cells.difference(sentence.cells)
-                new_count = count - sentence.count
-                new_sen = Sentence(new_cells,new_count)
-                self.knowledge.append(new_sen)
+        copy2 = self.knowledge.copy()
+
+        # loop through knowledge to create new sentence
+        for s1 in copy2:
+            for s2 in copy2:
+
+                # don't check the same sentence against itself
+                if s1 != s2:
+
+                    # if both exist
+                    if s1 and s2:
+
+                        # if s1 is a subset of s2
+                        if s1.cells.issubset(s2.cells):
+                            new_cells = list(s2.cells - s1.cells)
+                            new_count = s2.count - s1.count
+                            new_sen = Sentence(new_cells,new_count)
+                            self.knowledge.append(new_sen)
+            
 
 
     def make_safe_move(self):
