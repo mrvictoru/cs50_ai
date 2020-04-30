@@ -225,10 +225,6 @@ class MinesweeperAI():
         copy1 = self.knowledge.copy()
         for sentence in copy1:
             sen_copy = sentence.cells.copy()
-            # remove empty sentence
-            if sen_copy is None:
-                self.knowledge.remove(sentence)
-                continue
             
             check_mines = sentence.known_mines()
             check_safes = sentence.known_safes()
@@ -270,8 +266,10 @@ class MinesweeperAI():
                         if s1.cells.issubset(s2.cells):
                             new_cells = list(s2.cells - s1.cells)
                             new_count = s2.count - s1.count
+                            # make new sentence base on exisiting sentences
                             new_sen = Sentence(new_cells,new_count)
-                            self.knowledge.append(new_sen)
+                            if not new_sen in self.knowledge and not new_cells is None:
+                                self.knowledge.append(new_sen)
             
 
 
@@ -301,4 +299,6 @@ class MinesweeperAI():
             ran_move = (random.randint(0,self.height-1),random.randint(0,self.width-1))
             if not ran_move in self.mines and not ran_move in self.moves_made:
                 return ran_move
+            
+            # need a condition to indicate no moves can be made and return none
         
