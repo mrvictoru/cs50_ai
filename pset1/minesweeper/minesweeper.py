@@ -299,6 +299,8 @@ class MinesweeperAI():
             ran_move = (random.randint(0,self.height-1),random.randint(0,self.width-1))
             if not ran_move in self.mines and not ran_move in self.moves_made:
                 return ran_move
+            # if no. of known cells is the same as the size of the board
+            elif (len(self.mines) + len(self.safes)) == (self.height*self.width):
+                return None
             
-            # need a condition to indicate no moves can be made and return none
         
