@@ -81,7 +81,43 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    # inititalise pagerank
+    pagerank = {}
+    for key in corpus:
+        pagerank[key] = 0
+    # 1. generate random number which determine the first page to start surfering
+    num_page = len(corpus)
+    corpus_key = list(corpus)
+    rand_key = random.randint(0,num_page-1)
+    rand_page = corpus_key[rand_key]
+    pagerank[rand_page] = pagerank.get(rand_page,0) + 1
+
+    while True:
+    # 2. use transition model to find out probability to the next page
+        next_page_model = transition_model(corpus,rand_page,damping_factor)
+
+        link_pages = list(next_page_model)
+        pages_prob = list(next_page_model.values())
+        
+    # 3. generate random number to see which page to go to, then record the amount of time such page has been landed on
+        rand_key = random.uniform(0,1)
+        for i in range(len(link_pages)):
+            if i == 0:
+                if rand_key < pages_prob[i]:
+                    rand_page = link_pages[i]
+                    pagerank[rand_page] = pagerank.get(rand_page,0) + 1
+            else:
+                if rand_key < (pages_prob[i]+pages_prob[i-1]) and rand_key > (pages_prob[i-1]):
+                    rand_page = link_pages[i]
+                    pagerank[rand_page] = pagerank.get(rand_page,0) + 1
+    
+
+    # 4. repeat step 2 and 3 for n time
+        n -= 1
+        if (n<1):
+            break
+    # 5. return pagerank
+    return pagerank
 
 
 def iterate_pagerank(corpus, damping_factor):
