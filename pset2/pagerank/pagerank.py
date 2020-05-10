@@ -129,6 +129,21 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
+    # inititalise pagerank
+    num_page = len(corpus)
+    pagerank = {}
+    for key in corpus:
+        pagerank[key] = 1/num_page
+    
+    # iterate with the algorithm
+    while diff > 0.001:
+        for key in pagerank:
+            first = (1 - damping_factor)/num_page
+            second = 0
+            for link in corpus[key]:
+
+
+
     raise NotImplementedError
 
 
