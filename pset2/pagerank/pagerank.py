@@ -135,16 +135,21 @@ def iterate_pagerank(corpus, damping_factor):
     for key in corpus:
         pagerank[key] = 1/num_page
     
-    # iterate with the algorithm
+    # iterate with the algorithm until difference is smaller than 0.001
     while diff > 0.001:
         for key in pagerank:
+            check = pagerank[key]
             first = (1 - damping_factor)/num_page
             second = 0
             for link in corpus[key]:
+                second += pagerank[link]/len(corpus(link))
+            pagerank[key] = first + damping_factor * second
 
-
-
-    raise NotImplementedError
+            # check differences
+            diff = abs(check - pagerank[key])
+            check = pagerank[key]
+        
+    return pagerank
 
 
 if __name__ == "__main__":
