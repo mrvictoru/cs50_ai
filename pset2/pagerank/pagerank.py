@@ -2,6 +2,7 @@ import os
 import random
 import re
 import sys
+import time
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -82,6 +83,7 @@ def sample_pagerank(corpus, damping_factor, n):
     PageRank values should sum to 1.
     """
     # inititalise pagerank
+    count = n
     pagerank = {}
     for key in corpus:
         pagerank[key] = 0
@@ -111,12 +113,13 @@ def sample_pagerank(corpus, damping_factor, n):
                     rand_page = link_pages[i]
                     pagerank[rand_page] = pagerank.get(rand_page,0) + 1
     
-
     # 4. repeat step 2 and 3 for n time
-        n -= 1
-        if (n<1):
+        count -= 1
+        if (count<1):
             break
     # 5. return pagerank
+    for key in pagerank:
+        pagerank[key] = pagerank.get(key,0)/n
     return pagerank
 
 
@@ -136,18 +139,25 @@ def iterate_pagerank(corpus, damping_factor):
         pagerank[key] = 1/num_page
     
     # iterate with the algorithm until difference is smaller than 0.001
+    diff = 1
     while diff > 0.001:
+        sum_check = 0
         for key in pagerank:
             check = pagerank[key]
             first = (1 - damping_factor)/num_page
             second = 0
             for link in corpus[key]:
-                second += pagerank[link]/len(corpus(link))
+                second += pagerank[link]/len(corpus[link])
             pagerank[key] = first + damping_factor * second
 
             # check differences
             diff = abs(check - pagerank[key])
             check = pagerank[key]
+            sum_check += pagerank[key]
+        
+        print(pagerank)
+        print(sum_check)
+        time.sleep(0.5)
         
     return pagerank
 
