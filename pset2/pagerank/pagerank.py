@@ -3,6 +3,7 @@ import random
 import re
 import sys
 import time
+import numpy
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -60,15 +61,20 @@ def transition_model(corpus, page, damping_factor):
     """
     transition_model = {}
     num_page = len(corpus)
-
-    # recording existing pages from corpus and assign initial probability to each page
-    for key in corpus:
-        transition_model[key] = (1-damping_factor)/num_page
-    
     num_link = len(corpus[page])
+    # if this page doesnt have any outward link
+    if num_link == 0:
+        for key in corpus:
+            transition_model[key] = 1/num_page
+
+    else:
+    # recording existing pages from corpus and assign initial probability to each page
+        for key in corpus:
+            transition_model[key] = (1-damping_factor)/num_page
+    
     # reiterate link of page to calculate link probability
-    for link in corpus[page]:
-        transition_model[link] += damping_factor/num_link
+        for link in corpus[page]:
+            transition_model[link] += damping_factor/num_link
     
     return transition_model
 
@@ -83,7 +89,7 @@ def sample_pagerank(corpus, damping_factor, n):
     PageRank values should sum to 1.
     """
     # inititalise pagerank
-    count = n
+    count = 0
     pagerank = {}
     for key in corpus:
         pagerank[key] = 0
@@ -102,24 +108,19 @@ def sample_pagerank(corpus, damping_factor, n):
         pages_prob = list(next_page_model.values())
         
     # 3. generate random number to see which page to go to, then record the amount of time such page has been landed on
-        rand_key = random.uniform(0,1)
-        for i in range(len(link_pages)):
-            if i == 0:
-                if rand_key < pages_prob[i]:
-                    rand_page = link_pages[i]
-                    pagerank[rand_page] = pagerank.get(rand_page,0) + 1
-            else:
-                if rand_key < (pages_prob[i]+pages_prob[i-1]) and rand_key > (pages_prob[i-1]):
-                    rand_page = link_pages[i]
-                    pagerank[rand_page] = pagerank.get(rand_page,0) + 1
+        rand_page = numpy.random.choice(link_pages,1,p=pages_prob)[0]
+        pagerank[rand_page] = pagerank.get(rand_page,0)+1
     
     # 4. repeat step 2 and 3 for n time
-        count -= 1
-        if (count<1):
+        count += 1
+        if (count==n):
             break
     # 5. return pagerank
+    sum_check = 0
     for key in pagerank:
         pagerank[key] = pagerank.get(key,0)/n
+        sum_check += pagerank[key]
+
     return pagerank
 
 
@@ -138,27 +139,39 @@ def iterate_pagerank(corpus, damping_factor):
     for key in corpus:
         pagerank[key] = 1/num_page
     
-    # iterate with the algorithm until difference is smaller than 0.001
-    diff = 1
-    while diff > 0.001:
+    # iterate with the algorithm until difference is smaller than 0.001 for all pages
+    diff_count = 0
+    while diff_count < num_page:
+        diff_count = 0
+        pre_rank = pagerank.copy()
         sum_check = 0
         for key in pagerank:
-            check = pagerank[key]
+            check = pre_rank[key]
             first = (1 - damping_factor)/num_page
             second = 0
-            for link in corpus[key]:
-                second += pagerank[link]/len(corpus[link])
-            pagerank[key] = first + damping_factor * second
+ 
+            # to handle if page have no outward link
+            if len(corpus[key]) != 0:
+                for link in corpus[key]:
+                    # to handle if page have no outward link
+                    if len(corpus[link]) != 0:
+                        second += pre_rank[link]/len(corpus[link])
+                    else:
+                        second += pre_rank[link]/num_page
+                pagerank[key] = first + damping_factor * second
+            else:
+                for link in pagerank:
+                    second += pre_rank[link]/num_page
+                pagerank[key] = second
+            
 
             # check differences
             diff = abs(check - pagerank[key])
-            check = pagerank[key]
+            if diff < 0.001:
+                diff_count += 1
             sum_check += pagerank[key]
-        
-        print(pagerank)
-        print(sum_check)
-        time.sleep(0.5)
-        
+        print("sum_check:", sum_check)
+        print()
     return pagerank
 
 
