@@ -62,7 +62,7 @@ def transition_model(corpus, page, damping_factor):
     transition_model = {}
     num_page = len(corpus)
     num_link = len(corpus[page])
-    # if this page doesnt have any outward link
+    # if this page doesnt have any outward link, give it equal chance to go to all pages
     if num_link == 0:
         for key in corpus:
             transition_model[key] = 1/num_page
@@ -159,6 +159,7 @@ def iterate_pagerank(corpus, damping_factor):
                     else:
                         second += pre_rank[link]/num_page
                 pagerank[key] = first + damping_factor * second
+
             else:
                 for link in pagerank:
                     second += pre_rank[link]/num_page
@@ -170,8 +171,6 @@ def iterate_pagerank(corpus, damping_factor):
             if diff < 0.001:
                 diff_count += 1
             sum_check += pagerank[key]
-        print("sum_check:", sum_check)
-        print()
     return pagerank
 
 
