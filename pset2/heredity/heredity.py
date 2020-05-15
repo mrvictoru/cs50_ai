@@ -175,10 +175,10 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             if person in one_gene:
                 i = 1
                 # chance of getting gene from mother
-                if person["mother"] in one_gene:
-                    
+                if person["mother"] in two_genes and not(person["father"] in two_genes or person["father"] in one_gene):
+
                 
-                elif person["mother"] in two_genes:
+                elif person["mother"] in one_genes and :
                 
                 else:
 
