@@ -176,7 +176,8 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 i = 1
                 # chance of getting gene from mother
                 if person["mother"] in two_genes and not(person["father"] in two_genes or person["father"] in one_gene):
-
+                    j = 2
+                    p *= ((1-PROBS["mutation"])*PROBS["gene"][]
                 
                 elif person["mother"] in one_genes and :
                 
