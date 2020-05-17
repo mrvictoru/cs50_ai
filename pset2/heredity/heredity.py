@@ -141,9 +141,21 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     """
     # init p
     p = 1
+    mut = PROBS["mutation"]
+    not_mut = 1 - PROBS["mutation"]
+    passon = 0.5
     # loop through person in people
     for person in people:
-        # check if this person has any parents
+        mum = person["mother"]
+        dad = person["father"]
+        mum_1 = mum in one_gene
+        mum_2 = mum in two_genes
+        mum_0 = not(mum in two_genes or mum in one_gene)
+        dad_1 = dad in one_gene
+        dad_2 = dad in two_genes
+        dad_0 = not(dad in two_genes or dad in one_gene)
+
+        # check if this person has any parents        
         if person['mother'] is None and person['father'] is None:
             # check if this person has any gene copy
             if person in one_gene:
@@ -171,24 +183,69 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 else:
                     p *= PROBS["trait"][i][False]
             
+        # if this person has parents, check through whether the parents have gene or not
         else:
             if person in one_gene:
                 i = 1
                 # chance of getting gene from mother
-                if person["mother"] in two_genes and not(person["father"] in two_genes or person["father"] in one_gene):
-                    j = 2
-                    p *= ((1-PROBS["mutation"])*PROBS["gene"][]
-                
-                elif person["mother"] in one_genes and :
-                
-                else:
 
-            
+
+                if person in have_trait:
+                    p *= PROBS["trait"][i][True]
+                else:
+                    p *= PROBS["trait"][i][False]         
+
             elif person in two_genes:
                 i = 2
+                if mum_2 and dad_2:
+                    p *= not_mut*not_mut
+                elif mum_1 and dad_2:
+                    p *= passon*not_mut*not_mut
+                elif mum_0 and dad_2:
+                    p *= not_mut*mut
+                elif mum_2 and dad_1:
+                    p *= not_mut*passon*not_mut
+                elif mum_1 and dad_1:
+                    p *= passon*not_mut*passon*not_mut
+                elif mum_0 and dad_1:
+                    p *= not_mut*passon*mut
+                elif mum_2 and dad_0:
+                    p *= mut*not_mut
+                elif mum_1 and dad_0:
+                    p *= passon*mut*not_mut
+                else:
+                    p *= mut*mut
+
+                if person in have_trait:
+                    p *= PROBS["trait"][i][True]
+                else:
+                    p *= PROBS["trait"][i][False]
 
             else:
                 i = 0
+                if mum_2 and dad_2:
+                    p *= mut*mut
+                elif mum_1 and dad_2:
+                    p *= passon*mut*mut
+                elif mum_0 and dad_2:
+                    p *= not_mut*mut
+                elif mum_2 and dad_1:
+                    p *= mut*passon*mut
+                elif mum_1 and dad_1:
+                    p *= passon*mut*passon*mut
+                elif mum_0 and dad_1:
+                    p *= not_mut*passon*mut
+                elif mum_2 and dad_0:
+                    p *= mut*not_mut
+                elif mum_1 and dad_0:
+                    p *= passon*mut*not_mut
+                else:
+                    p *= not_mut*not_mut
+                
+                if person in have_trait:
+                    p *= PROBS["trait"][i][True]
+                else:
+                    p *= PROBS["trait"][i][False]
             
         
         
