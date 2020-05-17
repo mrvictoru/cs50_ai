@@ -297,7 +297,7 @@ def normalize(probabilities):
     for person in probabilities:
         for key in probabilities[person]:
             sum = 0
-            for probs in probabilities[person][key]:
+            for probs in probabilities[person][key].values():
                 sum += probs
                 print("probs:", probs)
             print("sum:",sum)
