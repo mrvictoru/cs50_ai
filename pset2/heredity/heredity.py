@@ -146,8 +146,8 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     passon = 0.5
     # loop through person in people
     for person in people:
-        mum = person["mother"]
-        dad = person["father"]
+        mum = people[person]["mother"]
+        dad = people[person]["father"]
         mum_1 = mum in one_gene
         mum_2 = mum in two_genes
         mum_0 = not(mum in two_genes or mum in one_gene)
@@ -156,7 +156,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         dad_0 = not(dad in two_genes or dad in one_gene)
 
         # check if this person has any parents        
-        if person['mother'] is None and person['father'] is None:
+        if mum is None and dad is None:
             # check if this person has any gene copy
             if person in one_gene:
                 # calculate join probability of such scenario
@@ -285,7 +285,7 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
         if person in have_trait:
             probabilities[person]["trait"][True] += p
         else:
-            probabilities[person]["Trait"][False] += p
+            probabilities[person]["trait"][False] += p
 
 
 
@@ -295,16 +295,17 @@ def normalize(probabilities):
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
     for person in probabilities:
-        for key in person:
+        for key in probabilities[person]:
             sum = 0
-            for probs in key.values():
+            for probs in probabilities[person][key]:
                 sum += probs
+                print("probs:", probs)
+            print("sum:",sum)
             if sum < 1:
+                print(sum)
                 factor = 1/sum
-            for probs in key:
-                key[probs] = key.get(probs,0) * factor
-
-
+                for probs in probabilities[person][key]:
+                    probabilities[person][key][probs] = probabilities[person][key].get(probs,0) * factor
 
 
 if __name__ == "__main__":
