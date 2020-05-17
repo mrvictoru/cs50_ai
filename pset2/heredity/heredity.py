@@ -187,7 +187,24 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         else:
             if person in one_gene:
                 i = 1
-                # chance of getting gene from mother
+                if mum_2 and dad_2:
+                    p *= (not_mut*mut + not_mut*mut)
+                elif mum_1 and dad_2:
+                    p *= (passon*not_mut*mut + not_mut*passon*mut)
+                elif mum_0 and dad_2:
+                    p *= (mut*mut + not_mut*not_mut)
+                elif mum_2 and dad_1:
+                    p *= (not_mut*passon*mut + passon*not_mut*mut)
+                elif mum_1 and dad_1:
+                    p *= (passon*not_mut*passon*mut + passon*not_mut*passon*mut)
+                elif mum_0 and dad_1:
+                    p *= (mut*passon*mut + passon*not_mut*not_mut)
+                elif mum_2 and dad_0:
+                    p *= (not_mut*not_mut + mut*mut)
+                elif mum_1 and dad_0:
+                    p *= (passon*not_mut*not_mut + mut*passon*mut)
+                else:
+                    p *= (mut*not_mut + mut*not_mut)
 
 
                 if person in have_trait:
@@ -247,10 +264,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 else:
                     p *= PROBS["trait"][i][False]
             
-        
-        
-
-    raise NotImplementedError
+    return p
 
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
