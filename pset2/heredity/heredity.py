@@ -274,6 +274,7 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
+
     for person in probabilities:
         if person in one_gene:
             probabilities[person]["gene"][1] += p
@@ -299,10 +300,8 @@ def normalize(probabilities):
             sum = 0
             for probs in probabilities[person][key].values():
                 sum += probs
-                print("probs:", probs)
-            print("sum:",sum)
+
             if sum < 1:
-                print(sum)
                 factor = 1/sum
                 for probs in probabilities[person][key]:
                     probabilities[person][key][probs] = probabilities[person][key].get(probs,0) * factor
