@@ -171,6 +171,8 @@ def iterate_pagerank(corpus, damping_factor):
             if diff < 0.001:
                 diff_count += 1
             sum_check += pagerank[key]
+        
+        # normalisation using sum_check
     return pagerank
 
 
