@@ -100,7 +100,7 @@ class CrosswordCreator():
          constraints; in this case, the length of the word.)
         """
         for v in self.domains:
-            for x in v:
+            for x in self.domains[v]:
                 if v.length != len(x): # constrain condition, word lenght need to be the same as variable length
                     self.domains[v].remove(x) # remove node for failing constrain
 
@@ -117,10 +117,10 @@ class CrosswordCreator():
         overlaps = self.crossword.overlaps[x,y]
 
         if overlaps is None:
-            return False
-        else:
-            self.domains[x].remove(overlaps[0])
+            self.domains[x].remove()
             return True
+        else:
+            return False
 
 
     def ac3(self, arcs=None):
@@ -132,6 +132,9 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
+        if arcs is None:
+            
+
         raise NotImplementedError
 
     def assignment_complete(self, assignment):
