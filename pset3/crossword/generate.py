@@ -195,6 +195,8 @@ def main():
 
     # Generate crossword
     crossword = Crossword(structure, words)
+    print("check")
+
     creator = CrosswordCreator(crossword)
     assignment = creator.solve()
 
@@ -205,6 +207,7 @@ def main():
         creator.print(assignment)
         if output:
             creator.save(assignment, output)
+
 
 
 if __name__ == "__main__":
