@@ -140,7 +140,15 @@ class CrosswordCreator():
         return False if one or more domains end up empty.
         """
         if arcs is None:
-            
+            arcs = []
+            # loop through all var in domain
+            for x in self.domains:
+                # finding neighbor of x and pair them as an arc
+                arc = (x,self.crossword.neighbors(x))
+                # if such arc not already in list, add them
+                if arc not in arcs:
+                    arcs.append(arc)
+        
 
         raise NotImplementedError
 
