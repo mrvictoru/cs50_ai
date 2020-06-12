@@ -121,6 +121,7 @@ class CrosswordCreator():
         if overlaps is None:
             return ret
         
+        # to check whether the word in x and word in y has the same character at overlap position
         for xword in self.domains[x].values():
             for yword in self.domains[y].values():
                 if xword[overlaps[0]] != yword[overlaps[1]]:
@@ -143,14 +144,27 @@ class CrosswordCreator():
             arcs = []
             # loop through all var in domain
             for x in self.domains:
-                # finding neighbor of x and pair them as an arc
-                arc = (x,self.crossword.neighbors(x))
-                # if such arc not already in list, add them
-                if arc not in arcs:
-                    arcs.append(arc)
+                # loop through all neighbor of x
+                for neighbor in self.crossword.neighbors(x):
+                    # finding neighbors of x and pair them as an arc
+                    arc = (x,neighbor)
+                    # if such arc not already in list, add them
+                    if arc not in arcs:
+                        arcs.append(arc)
         
+        # as long as the arcs list isnt empty
+        while not arcs:
+            # dequeue from arcs
+            arc = arcs.pop() 
+            if self.revise(arc[0],arc[1]):
+                # if nothing left in arc[0], no condition satsify csp
+                if len(arc[0]) == 0:
+                    return False
+                for z in self.crossword.neighbors(arc[0]):
+                    if z != arc[1]:
+                        arcs.append((z,arc[0]))
 
-        raise NotImplementedError
+        return True               
 
     def assignment_complete(self, assignment):
         """
