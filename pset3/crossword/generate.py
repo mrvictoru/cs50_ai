@@ -155,11 +155,13 @@ class CrosswordCreator():
         # as long as the arcs list isnt empty
         while not arcs:
             # dequeue from arcs
-            arc = arcs.pop() 
+            arc = arcs.pop()
+            # to enforce arc consistant and check whether it happened 
             if self.revise(arc[0],arc[1]):
                 # if nothing left in arc[0], no condition satsify csp
                 if len(arc[0]) == 0:
                     return False
+                # add neighbor back in as it might no longer be arc consistant
                 for z in self.crossword.neighbors(arc[0]):
                     if z != arc[1]:
                         arcs.append((z,arc[0]))
@@ -174,7 +176,7 @@ class CrosswordCreator():
         # loop through the list of words in assignment
         for words in assignment.values():
             # if there is more than 1 word in the list, assignment not complete
-            if len(word) != 1:
+            if len(words) != 1:
                 return False
             else:
                 return True
@@ -185,7 +187,26 @@ class CrosswordCreator():
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        raise NotImplementedError
+        ret = True
+        # loop through the assignment
+        for variable in assignment:
+            # check for whether all values are distinct
+            if len(assignment.variable) > len(set(assignment.variable)):
+                ret = False
+            # loop through all the words in each variable
+            for words in assignment[variable]:
+                # check for node consistancy
+                if len(words) != variable.length:
+                    ret = False
+            # loop through neighbor of variable to check for conflict
+            for neighbor in self.crossword.neighbor(variable):
+                overlaps = self.crossword.overlaps[variable,neighbor]
+                for vword in self.domains[variable].values():
+                    for neword in self.domains[neighbor].values():
+                        if vword[overlaps[0]] != neword[overlaps[1]]:
+                            ret = False
+
+        return ret
 
     def order_domain_values(self, var, assignment):
         """
