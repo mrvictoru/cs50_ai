@@ -100,9 +100,9 @@ class CrosswordCreator():
          constraints; in this case, the length of the word.)
         """
         for v in self.domains:
-            for x in self.domains[v]:
-                if v.length != len(x): # constrain condition, word lenght need to be the same as variable length
-                    self.domains[v].remove(x) # remove node for failing constrain
+            for word in self.domains[v]:
+                if v.length != len(word): # constrain condition, word lenght need to be the same as variable length
+                    self.domains[v].remove(word) # remove node for failing constrain
 
 
     def revise(self, x, y):
@@ -171,7 +171,14 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        raise NotImplementedError
+        # loop through the list of words in assignment
+        for words in assignment.values():
+            # if there is more than 1 word in the list, assignment not complete
+            if len(word) != 1:
+                return False
+            else:
+                return True
+            
 
     def consistent(self, assignment):
         """
