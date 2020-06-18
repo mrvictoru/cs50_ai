@@ -221,10 +221,11 @@ class CrosswordCreator():
             cell = ()
             n = 0
             # loop through the values in neigbor's domain
-            for neighbor_values in self.crossword.neighbors(var).values:
+            for neighbor in self.crossword.neighbors(var):
+                if neighbor not in assignment
                 # count whether how many same values in the the neighbor.
-                if values == neighbor_values:
-                    n += 1
+                    if values == self.domains[neighbor]:
+                        n += 1
             cell = (values,n)
             orderlist.append[cell]
         # sort the list with the least number of values among the neighbors to most
@@ -239,7 +240,18 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        raise NotImplementedError
+        remainlist = []
+        # loop through the domain
+        for variable in self.domains:
+            # check if it is assigned
+            if variable not in assignment:
+                cell = (variable,len(self.domains[variable]))
+                # put the variable and num of remaining values in list
+                remainlist.append[cell]
+        # sort according number of remaining values
+        remainlist.sort(key = lambda x:x[1])
+        
+        
 
     def backtrack(self, assignment):
         """
