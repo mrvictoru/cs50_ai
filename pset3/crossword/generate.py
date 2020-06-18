@@ -199,7 +199,7 @@ class CrosswordCreator():
                 if len(words) != variable.length:
                     ret = False
             # loop through neighbor of variable to check for conflict
-            for neighbor in self.crossword.neighbor(variable):
+            for neighbor in self.crossword.neighbors(variable):
                 overlaps = self.crossword.overlaps[variable,neighbor]
                 for vword in self.domains[variable].values():
                     for neword in self.domains[neighbor].values():
@@ -216,9 +216,19 @@ class CrosswordCreator():
         that rules out the fewest values among the neighbors of `var`.
         """
         orderlist = []
+        # loop through the values in those domain
         for values in var.values():
-            orderlist.append(values)
-        
+            cell = ()
+            n = 0
+            # loop through the values in neigbor's domain
+            for neighbor_values in self.crossword.neighbors(var).values:
+                # count whether how many same values in the the neighbor.
+                if values == neighbor_values:
+                    n += 1
+            cell = (values,n)
+            orderlist.append[cell]
+        # sort the list with the least number of values among the neighbors to most
+        orderlist.sort(key = lambda x:x[1])        
         return orderlist
 
     def select_unassigned_variable(self, assignment):
