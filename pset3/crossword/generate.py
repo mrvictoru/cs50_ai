@@ -222,7 +222,7 @@ class CrosswordCreator():
             n = 0
             # loop through the values in neigbor's domain
             for neighbor in self.crossword.neighbors(var):
-                if neighbor not in assignment
+                if neighbor not in assignment:
                 # count whether how many same values in the the neighbor.
                     if values == self.domains[neighbor]:
                         n += 1
@@ -251,6 +251,15 @@ class CrosswordCreator():
         # sort according number of remaining values
         remainlist.sort(key = lambda x:x[1])
         
+        # take
+        while True:
+            if remainlist[-1][1] == remainlist[0][1] and len(remainlist) > 1:
+                break
+            elif len(remainlist) == 1:
+                return remainlist[0]
+            else:
+                remainlist.pop()
+
         
 
     def backtrack(self, assignment):
