@@ -247,20 +247,34 @@ class CrosswordCreator():
             if variable not in assignment:
                 cell = (variable,len(self.domains[variable]))
                 # put the variable and num of remaining values in list
-                remainlist.append[cell]
+                remainlist.append(cell)
         # sort according number of remaining values
         remainlist.sort(key = lambda x:x[1])
         
-        # take
+        # take out variable which has higher number of remaining values
         while True:
-            if remainlist[-1][1] == remainlist[0][1] and len(remainlist) > 1:
-                break
-            elif len(remainlist) == 1:
-                return remainlist[0]
+            if remainlist[-1][1] == remainlist[0][1]:
+                # if only one left, return such variable
+                if len(remainlist) == 1:
+                    return remainlist[0]
+                else:
+                    break
             else:
                 remainlist.pop()
 
+        # find the variable with the highest degree (most number of neighbor)
+        max = 0
+        variable = self.crossword.variables()
+        for var in remainlist:
+            degree = len(self.crossword.neighbors(var))
+            if degree > max:
+                max = degree
+                variable = var
         
+        return var
+
+            
+
 
     def backtrack(self, assignment):
         """
