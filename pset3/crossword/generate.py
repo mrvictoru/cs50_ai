@@ -178,8 +178,8 @@ class CrosswordCreator():
             # if there is more than 1 word in the list, assignment not complete
             if len(words) != 1:
                 return False
-            else:
-                return True
+        
+        return True
             
 
     def consistent(self, assignment):
@@ -271,9 +271,7 @@ class CrosswordCreator():
                 max = degree
                 variable = var
         
-        return var
-
-            
+        return var          
 
 
     def backtrack(self, assignment):
@@ -285,7 +283,24 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
-        raise NotImplementedError
+        # return assignment if complete
+        if self.assignment_complete(assignment):
+            return assignment
+        
+        # select unassigned variable
+        var = self.select_unassigned_variable(assignment)
+
+        # loop through value in those variable
+        for value in self.order_domain_values(var,assignment):
+            # check if this variable with this value is consistent with the assignment
+            check = dict(assignment)
+            check.update({var:value})
+            if self.consistent(check):
+                assignment.append({var:value})
+
+
+
+        return None
 
 
 def main():
