@@ -1,5 +1,5 @@
 import sys
-
+import copy
 from crossword import *
 
 
@@ -100,7 +100,8 @@ class CrosswordCreator():
          constraints; in this case, the length of the word.)
         """
         for v in self.domains:
-            for word in self.domains[v]:
+            checklist = copy.deepcopy(self.domains[v])
+            for word in checklist:
                 if v.length != len(word): # constrain condition, word lenght need to be the same as variable length
                     self.domains[v].remove(word) # remove node for failing constrain
 
@@ -296,9 +297,19 @@ class CrosswordCreator():
             check = dict(assignment)
             check.update({var:value})
             if self.consistent(check):
-                assignment.append({var:value})
-
-
+                assignment.update({var:value})
+            # maintaining arc-consistency with var and its neighbors
+            for neighbor in self.crossword.neighbors(var):
+                if self.ac3([(neighbor,var)]):
+                    # if after enfocing arc-consistency, there is only one value left, add that to assignment
+                    if len(neighbor) == 1:
+                        assignment.update(neighbor)
+                result = self.backtrack(assignment)
+                if result is not None:
+                    return result
+                else:
+                    assignment.pop(neighbor)
+            assignment.pop({var:value})
 
         return None
 
