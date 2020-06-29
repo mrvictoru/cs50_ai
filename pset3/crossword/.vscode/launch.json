@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "args": [
-                "--test", "python3 generate.py data/structure1.txt data/words1.txt",
+                "data/structure1.txt", "data/words1.txt"
             ]
         }
     ]

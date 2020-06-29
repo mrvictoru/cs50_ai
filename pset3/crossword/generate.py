@@ -174,6 +174,8 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
+        if len(assignment) == 0:
+            return False
         # loop through the list of words in assignment
         for words in assignment.values():
             # if there is more than 1 word in the list, assignment not complete
@@ -192,18 +194,16 @@ class CrosswordCreator():
         # loop through the assignment
         for variable in assignment:
             # check for whether all values are distinct
-            if len(assignment.variable) > len(set(assignment.variable)):
+            if len(self.domains[variable]) > len(set(self.domains[variable])):
                 ret = False
-            # loop through all the words in each variable
-            for words in assignment[variable]:
-                # check for node consistancy
-                if len(words) != variable.length:
-                    ret = False
+            # check for node consistancy
+            if len(assignment[variable]) != variable.length:
+                ret = False
             # loop through neighbor of variable to check for conflict
             for neighbor in self.crossword.neighbors(variable):
                 overlaps = self.crossword.overlaps[variable,neighbor]
-                for vword in self.domains[variable].values():
-                    for neword in self.domains[neighbor].values():
+                for vword in self.domains[variable]:
+                    for neword in self.domains[neighbor]:
                         if vword[overlaps[0]] != neword[overlaps[1]]:
                             ret = False
 
@@ -218,17 +218,19 @@ class CrosswordCreator():
         """
         orderlist = []
         # loop through the values in those domain
-        for values in var.values():
+        for value in self.domains[var]:
             cell = ()
             n = 0
             # loop through the values in neigbor's domain
             for neighbor in self.crossword.neighbors(var):
+                # dont look at neighbor that is already ruled out
                 if neighbor not in assignment:
-                # count whether how many same values in the the neighbor.
-                    if values == self.domains[neighbor]:
-                        n += 1
-            cell = (values,n)
-            orderlist.append[cell]
+                # count how many same values is in the the neighbor.
+                    for nei_value in self.domains[neighbor]:
+                        if value == nei_value:
+                            n += 1
+            cell = (value,n)
+            orderlist.append(cell)
         # sort the list with the least number of values among the neighbors to most
         orderlist.sort(key = lambda x:x[1])        
         return orderlist
@@ -257,7 +259,7 @@ class CrosswordCreator():
             if remainlist[-1][1] == remainlist[0][1]:
                 # if only one left, return such variable
                 if len(remainlist) == 1:
-                    return remainlist[0]
+                    return remainlist[0][0]
                 else:
                     break
             else:
@@ -270,7 +272,7 @@ class CrosswordCreator():
             degree = len(self.crossword.neighbors(var))
             if degree > max:
                 max = degree
-                variable = var
+                variable = var[0]
         
         return var          
 
@@ -292,7 +294,7 @@ class CrosswordCreator():
         var = self.select_unassigned_variable(assignment)
 
         # loop through value in those variable
-        for value in self.order_domain_values(var,assignment):
+        for value in self.order_domain_values(var,assignment)[0]:
             # check if this variable with this value is consistent with the assignment
             check = dict(assignment)
             check.update({var:value})
