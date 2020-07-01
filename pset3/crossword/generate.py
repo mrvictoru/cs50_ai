@@ -190,24 +190,25 @@ class CrosswordCreator():
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        ret = True
         # loop through the assignment
         for variable in assignment:
             # check for whether all values are distinct
             if len(self.domains[variable]) > len(set(self.domains[variable])):
-                ret = False
+                return False
             # check for node consistancy
             if len(assignment[variable]) != variable.length:
-                ret = False
+                return False
             # loop through neighbor of variable to check for conflict
             for neighbor in self.crossword.neighbors(variable):
+                if neighbor not in assignment:
+                    continue
                 overlaps = self.crossword.overlaps[variable,neighbor]
-                for vword in self.domains[variable]:
-                    for neword in self.domains[neighbor]:
-                        if vword[overlaps[0]] != neword[overlaps[1]]:
-                            ret = False
+                vletter = assignment[variable][overlaps[0]]
+                nletter = assignment[neighbor][overlaps[1]]
+                if vletter != nletter:
+                    return False
 
-        return ret
+        return True
 
     def order_domain_values(self, var, assignment):
         """
@@ -267,14 +268,14 @@ class CrosswordCreator():
 
         # find the variable with the highest degree (most number of neighbor)
         max = 0
-        variable = self.crossword.variables()
+
         for var in remainlist:
-            degree = len(self.crossword.neighbors(var))
+            degree = len(self.crossword.neighbors(var[0]))
             if degree > max:
                 max = degree
                 variable = var[0]
         
-        return var          
+        return variable          
 
 
     def backtrack(self, assignment):
@@ -304,7 +305,7 @@ class CrosswordCreator():
             for neighbor in self.crossword.neighbors(var):
                 if self.ac3([(neighbor,var)]):
                     # if after enfocing arc-consistency, there is only one value left, add that to assignment
-                    if len(neighbor) == 1:
+                    if len(self.domains[neighbor]) == 1:
                         assignment.update(neighbor)
                 result = self.backtrack(assignment)
                 if result is not None:
