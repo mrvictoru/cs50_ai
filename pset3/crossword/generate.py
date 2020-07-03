@@ -123,11 +123,17 @@ class CrosswordCreator():
             return ret
         
         # to check whether the word in x and word in y has the same character at overlap position
-        for xword in self.domains[x].values():
-            for yword in self.domains[y].values():
+        xlist = list(self.domains[x])
+        ylist = list(self.domains[y])
+        for xword in xlist:
+            for yword in ylist:
+                # if there is no overlaps remove xword, else keep xword
                 if xword[overlaps[0]] != yword[overlaps[1]]:
                     self.domains[x].remove(xword)
                     ret = True
+                    break
+                else:
+                    break
         
         return ret
 
@@ -154,7 +160,7 @@ class CrosswordCreator():
                         arcs.append(arc)
         
         # as long as the arcs list isnt empty
-        while not arcs:
+        while arcs:
             # dequeue from arcs
             arc = arcs.pop()
             # to enforce arc consistant and check whether it happened 
@@ -174,16 +180,10 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        if len(assignment) == 0:
+        if len(assignment) != len(self.domains):
             return False
-        # loop through the list of words in assignment
-        for words in assignment.values():
-            # if there is more than 1 word in the list, assignment not complete
-            if len(words) != 1:
-                return False
-        
-        return True
-            
+        else:
+            return True            
 
     def consistent(self, assignment):
         """
