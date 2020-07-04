@@ -166,7 +166,7 @@ class CrosswordCreator():
             # to enforce arc consistant and check whether it happened 
             if self.revise(arc[0],arc[1]):
                 # if nothing left in arc[0], no condition satsify csp
-                if len(arc[0]) == 0:
+                if len(self.domains[arc[0]]) == 0:
                     return False
                 # add neighbor back in as it might no longer be arc consistant
                 for z in self.crossword.neighbors(arc[0]):
@@ -293,6 +293,8 @@ class CrosswordCreator():
         
         # select unassigned variable
         var = self.select_unassigned_variable(assignment)
+
+        loop = self.order_domain_values(var,assignment)
 
         # loop through value in those variable
         for value in self.order_domain_values(var,assignment)[0]:
