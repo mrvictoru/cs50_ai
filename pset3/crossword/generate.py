@@ -163,10 +163,14 @@ class CrosswordCreator():
         while arcs:
             # dequeue from arcs
             arc = arcs.pop()
+            # back up list of values in arc[0]
+            backup = list(self.domains[arc[0]])
             # to enforce arc consistant and check whether it happened 
             if self.revise(arc[0],arc[1]):
                 # if nothing left in arc[0], no condition satsify csp
                 if len(self.domains[arc[0]]) == 0:
+                    # add values for arc[0] back in from back up
+                    self.domains[arc[0]].append(backup)
                     return False
                 # add neighbor back in as it might no longer be arc consistant
                 for z in self.crossword.neighbors(arc[0]):
