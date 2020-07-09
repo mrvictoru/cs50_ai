@@ -310,7 +310,8 @@ class CrosswordCreator():
                 if self.ac3([(neighbor,var)]):
                     # if after enfocing arc-consistency, there is only one value left, add that to assignment
                     if len(self.domains[neighbor]) == 1:
-                        assignment.update({neighbor:self.domains[neighbor])
+                        for nvalue in self.domains[neighbor]:
+                            assignment.update({neighbor:nvalue})
                 result = self.backtrack(assignment)
                 if result is not None:
                     return result
