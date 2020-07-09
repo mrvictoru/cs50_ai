@@ -303,6 +303,7 @@ class CrosswordCreator():
             # check if this variable with this value is consistent with the assignment
             check = dict(assignment)
             check.update({var:value[0]})
+            inference = []
             if self.consistent(check):
                 assignment.update({var:value[0]})
                 # maintaining arc-consistency with var and its neighbors
@@ -311,12 +312,16 @@ class CrosswordCreator():
                         # if after enfocing arc-consistency, there is only one value left, add that to assignment
                         if len(self.domains[neighbor]) == 1:
                             for nvalue in self.domains[neighbor]:
+                                inference.append(neighbor)
                                 assignment.update({neighbor:nvalue})
                     result = self.backtrack(assignment)
                 if result is not None:
                     return result
+                else:
+                    for neighbor in inference:
+                        del assignment[neighbor]
 
-            assignment.pop({var:value[0]})
+            del assignment[var]
 
         return None
 
