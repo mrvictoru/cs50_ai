@@ -305,18 +305,17 @@ class CrosswordCreator():
             check.update({var:value[0]})
             if self.consistent(check):
                 assignment.update({var:value[0]})
-            # maintaining arc-consistency with var and its neighbors
-            for neighbor in self.crossword.neighbors(var):
-                if self.ac3([(neighbor,var)]):
-                    # if after enfocing arc-consistency, there is only one value left, add that to assignment
-                    if len(self.domains[neighbor]) == 1:
-                        for nvalue in self.domains[neighbor]:
-                            assignment.update({neighbor:nvalue})
-                result = self.backtrack(assignment)
+                # maintaining arc-consistency with var and its neighbors
+                for neighbor in self.crossword.neighbors(var):
+                    if self.ac3([(neighbor,var)]):
+                        # if after enfocing arc-consistency, there is only one value left, add that to assignment
+                        if len(self.domains[neighbor]) == 1:
+                            for nvalue in self.domains[neighbor]:
+                                assignment.update({neighbor:nvalue})
+                    result = self.backtrack(assignment)
                 if result is not None:
                     return result
-                else:
-                    assignment.pop(neighbor)
+
             assignment.pop({var:value[0]})
 
         return None
