@@ -164,13 +164,13 @@ class CrosswordCreator():
             # dequeue from arcs
             arc = arcs.pop()
             # back up list of values in arc[0]
-            backup = list(self.domains[arc[0]])
+            backup = set(self.domains[arc[0]])
             # to enforce arc consistant and check whether it happened 
             if self.revise(arc[0],arc[1]):
                 # if nothing left in arc[0], no condition satsify csp
                 if len(self.domains[arc[0]]) == 0:
                     # add values for arc[0] back in from back up
-                    self.domains[arc[0]].append(backup)
+                    self.domains[arc[0]].update(backup)
                     return False
                 # add neighbor back in as it might no longer be arc consistant
                 for z in self.crossword.neighbors(arc[0]):
@@ -298,27 +298,25 @@ class CrosswordCreator():
         # select unassigned variable
         var = self.select_unassigned_variable(assignment)
 
-        loop = self.order_domain_values(var,assignment)
-
         # loop through value in those variable
-        for value in self.order_domain_values(var,assignment)[0]:
+        for value in self.order_domain_values(var,assignment):
             # check if this variable with this value is consistent with the assignment
             check = dict(assignment)
-            check.update({var:value})
+            check.update({var:value[0]})
             if self.consistent(check):
-                assignment.update({var:value})
+                assignment.update({var:value[0]})
             # maintaining arc-consistency with var and its neighbors
             for neighbor in self.crossword.neighbors(var):
                 if self.ac3([(neighbor,var)]):
                     # if after enfocing arc-consistency, there is only one value left, add that to assignment
                     if len(self.domains[neighbor]) == 1:
-                        assignment.update(neighbor)
+                        assignment.update({neighbor:self.domains[neighbor])
                 result = self.backtrack(assignment)
                 if result is not None:
                     return result
                 else:
                     assignment.pop(neighbor)
-            assignment.pop({var:value})
+            assignment.pop({var:value[0]})
 
         return None
 
