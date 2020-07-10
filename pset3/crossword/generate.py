@@ -319,9 +319,9 @@ class CrosswordCreator():
                     return result
                 else:
                     for neighbor in inference:
-                        del assignment[neighbor]
+                        assignment.pop(neighbor,None)
 
-            del assignment[var]
+            assignment.pop(var,None)
 
         return None
 
