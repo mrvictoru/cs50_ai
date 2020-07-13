@@ -59,7 +59,7 @@ def load_data(filename):
     labels should be the corresponding list of labels, where each label
     is 1 if Revenue is true, and 0 otherwise.
     """
-    # open data file
+    # load data just like the demo in lecture
     with open(filename) as f:
 
         # read data into
@@ -67,18 +67,29 @@ def load_data(filename):
         # skip the header in csv
         next(reader)
 
-        evidence = []
-        labels = []
+        data = []
+        labels = False
 
         # loop through the reader
         for row in reader:
-            
+            data.append({
+                "evidence": [cell for cell in row [:17]],
+                "label": "1" if row[17] == "TRUE" else "0"
+            })
+    
+    evidence = [row["evidence"] for row in data]
+    label = [row["lable"] for row in data]
+    
+    return (evidence,labels)
 
 def train_model(evidence, labels):
     """
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
+    # initiate k-nearest neighbor model where k = 1
+    model = KneighborsClassifier(n_neighbors=1)
+
     raise NotImplementedError
 
 
