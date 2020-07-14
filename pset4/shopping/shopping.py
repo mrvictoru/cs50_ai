@@ -68,7 +68,6 @@ def load_data(filename):
         next(reader)
 
         data = []
-        labels = False
 
         # loop through the reader
         for row in reader:
@@ -78,7 +77,7 @@ def load_data(filename):
             })
     
     evidence = [row["evidence"] for row in data]
-    label = [row["lable"] for row in data]
+    labels = [row["label"] for row in data]
     
     return (evidence,labels)
 
@@ -88,9 +87,12 @@ def train_model(evidence, labels):
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
     # initiate k-nearest neighbor model where k = 1
-    model = KneighborsClassifier(n_neighbors=1)
+    model = KNeighborsClassifier(n_neighbors=1)
 
-    raise NotImplementedError
+    # fit models with training set data
+    model.fit(evidence, labels)
+
+    return model
 
 
 def evaluate(labels, predictions):
@@ -108,7 +110,25 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
+    tot_pos = 0
+    tot_neg = 0
+    act_pos = 0
+    act_neg = 0
+
+    for actual,predicted in in zip(labels,predictions):
+        if actual == "1":
+            tot_pos += 1
+            if actual == predicted:
+                act_pos += 1
+        else:
+            tot_neg += 1
+            if actual == predicted:
+                act_neg += 1
+    
+    sensitivity = float(act_pos/tot_pos)
+    specificity = float(act_neg/tot_neg)
+
+    return (sensitivity,specificity)
 
 
 if __name__ == "__main__":
