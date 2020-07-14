@@ -30,6 +30,45 @@ def main():
     print(f"True Positive Rate: {100 * sensitivity:.2f}%")
     print(f"True Negative Rate: {100 * specificity:.2f}%")
 
+def month2num (month):
+
+    if month == "Jan":
+        return 0
+
+    elif month == "Feb":
+        return 1
+
+    elif month == "Mar":
+        return 2
+
+    elif month == "Apr":
+        return 3
+
+    elif month == "May":
+        return 4
+
+    elif month == "June":
+        return 5
+
+    elif month == "Jul":
+        return 6
+
+    elif month == "Aug":
+        return 7
+
+    elif month == "Sep":
+        return 8
+
+    elif month == "Oct":
+        return 9
+
+    elif month == "Nov":
+        return 10
+
+    else:
+        return 11
+    
+
 
 def load_data(filename):
     """
@@ -67,17 +106,31 @@ def load_data(filename):
         # skip the header in csv
         next(reader)
 
-        data = []
+        evidence = []
+        labels = []
+
 
         # loop through the reader
         for row in reader:
-            data.append({
-                "evidence": [cell for cell in row [:17]],
-                "label": "1" if row[17] == "TRUE" else "0"
-            })
-    
-    evidence = [row["evidence"] for row in data]
-    labels = [row["label"] for row in data]
+            evilist = []
+            for cell in row[:17]:
+                if cell is row[10]:
+                    evilist.append(month2num(cell))
+                elif cell is row[15]:
+                    if cell == "Returning_Visitor":
+                        evilist.append("1")
+                    else:
+                        evilist.append("0")
+                elif cell is row[16]:
+                    if cell == "TRUE":
+                        evilist.append("1")
+                    else:
+                        evilist.append("0")
+                else:
+                    evilist.append(cell)
+            
+            evidence.append(evilist)
+            labels.append(["1" if row[17] == "TRUE" else "0"])
     
     return (evidence,labels)
 
@@ -92,6 +145,7 @@ def train_model(evidence, labels):
     # fit models with training set data
     model.fit(evidence, labels)
 
+    # need to match the formate of list of list
     return model
 
 
@@ -115,14 +169,14 @@ def evaluate(labels, predictions):
     act_pos = 0
     act_neg = 0
 
-    for actual,predicted in in zip(labels,predictions):
-        if actual == "1":
+    for actual,predicted in zip(labels,predictions):
+        if actual[0] == "1":
             tot_pos += 1
-            if actual == predicted:
+            if actual[0] == predicted:
                 act_pos += 1
         else:
             tot_neg += 1
-            if actual == predicted:
+            if actual[0] == predicted:
                 act_neg += 1
     
     sensitivity = float(act_pos/tot_pos)
