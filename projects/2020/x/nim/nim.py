@@ -122,7 +122,7 @@ class NimAI():
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
         """
-        self.q[tuple(state),action] = (old_q + self.alpha * ((reward + self.epsilon*future_rewards) - old_q))
+        self.q[tuple(state),action] = (old_q + self.alpha * ((reward + future_rewards) - old_q))
 
         return True
 
@@ -147,7 +147,7 @@ class NimAI():
             for action in all_actions:
                 new_state = state
                 pile, count = action
-                # work out those state for each action
+                # work out the state after each action
                 new_state[pile] -= count
                 new_q = self.q[tuple(new_state),action]
                 if max_q < new_q:
@@ -170,7 +170,35 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
-        raise NotImplementedError
+        # calculate Q for given action and selection the action with max Q as best action
+        # very similar to best_future_reward
+        all_actions = Nim.available_actions(state)
+        max_q = 0
+        best_act = None
+
+        # loop through all possible actions for given state
+        for action in all_actions:
+            new_state = state
+            pile, count = action
+            # work out the state after each action
+            new_state[pile] -= count
+            new_q = self.q[tuple(new_state),action]
+            # check if new_q is bigger than max_q
+            if max_q < new_q:
+                max_q = new_q
+                best_act = action
+        
+        if epsilon:
+            # list of other actions not consider as best action
+            other = [item for item in all_actions if item not in best_act]
+            seq = [other,list(best_act)]
+            w = [self.epsilon, 1-self.epsilon]
+            chose = random.choice(random.choices(seq,weights=w))
+            return chose
+
+        else:
+            return best_act
+
 
 
 def train(n):
