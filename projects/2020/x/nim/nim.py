@@ -178,22 +178,22 @@ class NimAI():
 
         # loop through all possible actions for given state
         for action in all_actions:
-            new_state = state
+            new_state = state.copy()
             pile, count = action
             # work out the state after each action
             new_state[pile] -= count
             new_q = self.get_q_value(new_state,action)
             # check if new_q is bigger than max_q
-            if max_q < new_q:
+            if max_q <= new_q:
                 max_q = new_q
                 best_act = action
         
         if epsilon:
             # list of other actions not consider as best action
             other = [item for item in all_actions if item not in best_act]
-            seq = [other,list(best_act)]
+            seq = [other,[best_act]]
             w = [self.epsilon, 1-self.epsilon]
-            chose = random.choice(random.choices(seq,weights=w))
+            chose = random.choice(random.choices(seq,weights=w)[0])
             return chose
 
         else:
