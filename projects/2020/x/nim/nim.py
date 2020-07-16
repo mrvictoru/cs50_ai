@@ -1,6 +1,8 @@
 import math
 import random
 import time
+import csv
+import numpy
 
 
 class Nim():
@@ -72,7 +74,7 @@ class Nim():
 
 class NimAI():
 
-    def __init__(self, alpha=0.5, epsilon=0.1):
+    def __init__(self, alpha=0.1, epsilon=0.1):
         """
         Initialize AI with an empty Q-learning dictionary,
         an alpha (learning) rate, and an epsilon rate.
@@ -150,7 +152,7 @@ class NimAI():
                 # work out the state after each action
                 new_state[pile] -= count
                 new_q = self.get_q_value(new_state,action)
-                if max_q < new_q:
+                if max_q <= new_q:
                     max_q = new_q
 
             return max_q
@@ -201,6 +203,72 @@ class NimAI():
 
 
 
+def train_loop(n):
+    """
+    Train an AI by playing `n` games against itself and test it with various parameter and output len(self.q) as a measure of how well it is trained
+    """
+    with open('measure.csv','w') as f:
+        writer = csv.writer(f)
+        writer.writerows(['alpha','epsilon','measure'])
+        for alpha in numpy.arange(0.4,0.95,0.05):
+            f.seek(0)
+            for epsilon in numpy.arange (0.4,0.095,0.05):
+                player = NimAI(alpha,epsilon)
+
+                # Play n games
+                for i in range(n):
+                    print(f"Playing training game {i + 1}")
+                    game = Nim()
+
+                    # Keep track of last move made by either player
+                    last = {
+                        0: {"state": None, "action": None},
+                        1: {"state": None, "action": None}
+                    }
+
+                    # Game loop
+                    while True:
+
+                        # Keep track of current state and action
+                        state = game.piles.copy()
+                        action = player.choose_action(game.piles)
+
+                        # Keep track of last state and action
+                        last[game.player]["state"] = state
+                        last[game.player]["action"] = action
+
+                        # Make move
+                        game.move(action)
+                        new_state = game.piles.copy()
+
+                        # When game is over, update Q values with rewards
+                        if game.winner is not None:
+                            player.update(state, action, new_state, -1)
+                            player.update(
+                                last[game.player]["state"],
+                                last[game.player]["action"],
+                                new_state,
+                                1
+                            )
+                            break
+
+                        # If game is continuing, no rewards yet
+                        elif last[game.player]["state"] is not None:
+                            player.update(
+                                last[game.player]["state"],
+                                last[game.player]["action"],
+                                new_state,
+                                0
+                            )
+
+                print("Done training")
+                measure = len(player.q)
+                writer.writerows([alpha,epsilon,measure])
+    
+    return True
+
+
+
 def train(n):
     """
     Train an AI by playing `n` games against itself.
@@ -212,7 +280,6 @@ def train(n):
     for i in range(n):
         print(f"Playing training game {i + 1}")
         game = Nim()
-
         # Keep track of last move made by either player
         last = {
             0: {"state": None, "action": None},
@@ -255,10 +322,9 @@ def train(n):
                 )
 
     print("Done training")
-
+    
     # Return the trained AI
     return player
-
 
 def play(ai, human_player=None):
     """
