@@ -149,7 +149,7 @@ class NimAI():
                 pile, count = action
                 # work out the state after each action
                 new_state[pile] -= count
-                new_q = self.q[tuple(new_state),action]
+                new_q = get_q_value(new_state,action)
                 if max_q < new_q:
                     max_q = new_q
 
@@ -182,7 +182,7 @@ class NimAI():
             pile, count = action
             # work out the state after each action
             new_state[pile] -= count
-            new_q = self.q[tuple(new_state),action]
+            new_q = get_q_value(new_state,action)
             # check if new_q is bigger than max_q
             if max_q < new_q:
                 max_q = new_q
