@@ -1,8 +1,9 @@
 import math
 import random
 import time
-import csv
+
 import numpy
+import csv
 
 
 class Nim():
@@ -74,7 +75,7 @@ class Nim():
 
 class NimAI():
 
-    def __init__(self, alpha=0.1, epsilon=0.1):
+    def __init__(self, alpha=0.9, epsilon=0.9):
         """
         Initialize AI with an empty Q-learning dictionary,
         an alpha (learning) rate, and an epsilon rate.
@@ -207,66 +208,79 @@ def train_loop(n):
     """
     Train an AI by playing `n` games against itself and test it with various parameter and output len(self.q) as a measure of how well it is trained
     """
-    with open('measure.csv','w') as f:
-        writer = csv.writer(f)
-        writer.writerows(['alpha','epsilon','measure'])
-        for alpha in numpy.arange(0.4,0.95,0.05):
-            f.seek(0)
-            for epsilon in numpy.arange (0.4,0.095,0.05):
-                player = NimAI(alpha,epsilon)
+    loop = []
+    trial = numpy.arange(0.4,0.95,0.05)
+    max_len = 0
+    max_dict = None
+    for alpha in trial:
+        for epsilon in trial:
+            dict_measure = {}
 
-                # Play n games
-                for i in range(n):
-                    print(f"Playing training game {i + 1}")
-                    game = Nim()
+            dict_measure["alpha"]=alpha
+            dict_measure["epsilon"]=epsilon
+            
 
-                    # Keep track of last move made by either player
-                    last = {
-                        0: {"state": None, "action": None},
-                        1: {"state": None, "action": None}
-                    }
+            player = NimAI(alpha,epsilon)
 
-                    # Game loop
-                    while True:
+            # Play n games
+            for i in range(n):
+                print(f"Playing training game {i + 1}")
+                game = Nim()
 
-                        # Keep track of current state and action
-                        state = game.piles.copy()
-                        action = player.choose_action(game.piles)
+                # Keep track of last move made by either player
+                last = {
+                    0: {"state": None, "action": None},
+                    1: {"state": None, "action": None}
+                }
 
-                        # Keep track of last state and action
-                        last[game.player]["state"] = state
-                        last[game.player]["action"] = action
+                # Game loop
+                while True:
 
-                        # Make move
-                        game.move(action)
-                        new_state = game.piles.copy()
+                    # Keep track of current state and action
+                    state = game.piles.copy()
+                    action = player.choose_action(game.piles)
 
-                        # When game is over, update Q values with rewards
-                        if game.winner is not None:
-                            player.update(state, action, new_state, -1)
-                            player.update(
-                                last[game.player]["state"],
-                                last[game.player]["action"],
-                                new_state,
-                                1
-                            )
-                            break
+                    # Keep track of last state and action
+                    last[game.player]["state"] = state
+                    last[game.player]["action"] = action
 
-                        # If game is continuing, no rewards yet
-                        elif last[game.player]["state"] is not None:
-                            player.update(
-                                last[game.player]["state"],
-                                last[game.player]["action"],
-                                new_state,
-                                0
-                            )
+                    # Make move
+                    game.move(action)
+                    new_state = game.piles.copy()
 
-                print("Done training")
-                measure = len(player.q)
-                writer.writerows([alpha,epsilon,measure])
-    
-    return True
+                    # When game is over, update Q values with rewards
+                    if game.winner is not None:
+                        player.update(state, action, new_state, -1)
+                        player.update(
+                            last[game.player]["state"],
+                            last[game.player]["action"],
+                            new_state,
+                            1
+                        )
+                        break
 
+                    # If game is continuing, no rewards yet
+                    elif last[game.player]["state"] is not None:
+                        player.update(
+                            last[game.player]["state"],
+                            last[game.player]["action"],
+                            new_state,
+                            0
+                        )
+
+            print("Done training")
+            dict_measure["measure"] = len(player.q)
+            loop.append(dict_measure)
+            if dict_measure["measure"] > max_len:
+                max_dict = dict_measure
+
+            with open('measure.csv','w') as f:
+                writer = csv.DictWriter(f,fieldnames=['alpha','epsilon','measure'])
+                writer.writeheader()
+                for data in loop:
+                    writer.writerow(data)
+ 
+    print(max_dict)
 
 
 def train(n):
