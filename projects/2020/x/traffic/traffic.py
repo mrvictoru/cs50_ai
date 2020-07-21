@@ -58,6 +58,12 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
+    # loop through the sub_dir in data_dir
+    for label in range(NUM_CATEGORIES):
+        with os.scandir(os.paht.join(data_dir,os.sep,label)) as imgs:
+            for image in imgs:
+                img = cv2.imread(image.name)
+
     raise NotImplementedError
 
 
