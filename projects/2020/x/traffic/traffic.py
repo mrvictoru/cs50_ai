@@ -58,13 +58,21 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
+    images = []
+    labels = []
     # loop through the sub_dir in data_dir
     for label in range(NUM_CATEGORIES):
         with os.scandir(os.paht.join(data_dir,os.sep,label)) as imgs:
+            # loop through the img in sub_dir
             for image in imgs:
-                img = cv2.imread(image.name)
-
-    raise NotImplementedError
+                # read and resize the image
+                img = cv2.imread(os.paht.join(data_dir,os.sep,label,os.sep,image))
+                resized = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+                # add image and label to the list
+                images.append(resized)
+                labels.append(label)
+    
+    return (images,labels)
 
 
 def get_model():
