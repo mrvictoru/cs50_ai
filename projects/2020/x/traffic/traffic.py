@@ -62,16 +62,18 @@ def load_data(data_dir):
     labels = []
     # loop through the sub_dir in data_dir
     for label in range(NUM_CATEGORIES):
-        with os.scandir(os.paht.join(data_dir,os.sep,label)) as imgs:
+        with os.scandir(os.path.join(data_dir,str(label))) as imgs:
             # loop through the img in sub_dir
             for image in imgs:
                 # read and resize the image
-                img = cv2.imread(os.paht.join(data_dir,os.sep,label,os.sep,image))
-                resized = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+                img = cv2.imread(image.path)
+                resized = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT), )
                 # add image and label to the list
                 images.append(resized)
                 labels.append(label)
+                print("Img loaded")
     
+    print("Finished loading")
     return (images,labels)
 
 
@@ -94,13 +96,15 @@ def get_model():
         tf.keras.layers.Flatten(),
         # Add a hidden layer with dropout
         tf.keras.layers.Dense(128,activation="relu"),
-        tf.keras.layers.Dropout(0.5)
+        tf.keras.layers.Dropout(0.5),
         # Add an output(probability) layer with output units for all catagories 
         tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
     )
+
+    print("Model created")
 
     return model
 
 
 if __name__ == "__main__":
-    main()australian gold medal ice skating 
+    main()
