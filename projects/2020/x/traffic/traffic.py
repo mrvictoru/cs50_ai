@@ -85,9 +85,9 @@ def get_model():
     """
     # this structure is the same as the lecture demonstration
     # initial sequential neural network model
-    model = tf.keras.models.Sequential(
+    model = tf.keras.models.Sequential([
         # Convolutional layer
-        tf.keras.layers.Conv2d(
+        tf.keras.layers.Conv2D(
             32, (3,3), activation="relu", input_shape=(IMG_WIDTH,IMG_HEIGHT,3)
         ),
         # Max-pooling layer, using 2x2 pool size
@@ -99,9 +99,14 @@ def get_model():
         tf.keras.layers.Dropout(0.5),
         # Add an output(probability) layer with output units for all catagories 
         tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
-    )
+    ])
 
-    print("Model created")
+    model.compile(
+    optimizer="adam",
+    loss="categorical_crossentropy",
+    metrics=["accuracy"])
+
+    print("Model compiled")
 
     return model
 
