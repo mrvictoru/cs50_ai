@@ -71,7 +71,6 @@ def load_data(data_dir):
                 # add image and label to the list
                 images.append(resized)
                 labels.append(label)
-                print("Img loaded")
     
     print("Finished loading")
     return (images,labels)
