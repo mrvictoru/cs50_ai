@@ -86,17 +86,30 @@ def get_model():
     # this structure is the same as the lecture demonstration
     # initial sequential neural network model
     model = tf.keras.models.Sequential([
-        # Convolutional layer
+        # Convolutional layer of 32 different filters
         tf.keras.layers.Conv2D(
             32, (3,3), activation="relu", input_shape=(IMG_WIDTH,IMG_HEIGHT,3)
+        ),
+        # Max-pooling layer, using 2x2 pool size
+        tf.keras.layers.MaxPool2D(pool_size=(2,2)),
+        # Convolutional layer of 16 different filters
+        tf.keras.layers.Conv2D(
+            16, (3,3), activation="relu", input_shape=(IMG_WIDTH,IMG_HEIGHT,3)
         ),
         # Max-pooling layer, using 2x2 pool size
         tf.keras.layers.MaxPool2D(pool_size=(2,2)),
         # Flatten units
         tf.keras.layers.Flatten(),
         # Add a hidden layer with dropout
-        tf.keras.layers.Dense(128,activation="relu"),
+        tf.keras.layers.Dense(512,activation="relu"),
         tf.keras.layers.Dropout(0.5),
+        # Add a hidden layer with dropout
+        tf.keras.layers.Dense(512,activation="relu"),
+        tf.keras.layers.Dropout(0.5),
+        # Add a hidden layer with dropout
+        tf.keras.layers.Dense(512,activation="relu"),
+        tf.keras.layers.Dropout(0.5),
+
         # Add an output(probability) layer with output units for all catagories 
         tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
     ])
