@@ -8,3 +8,5 @@ Solutions to the projects in CS50 AI
 3. Uncertainty, use various methods to conclude certain probability (pagerank, heredity)
 4. Optimization, using algorithm like ac3 and backtrack to optimize a constraint satasifaction problem (crosswords)
 5. Learning, using different training models such as: supervised learning (shopping), reinforced learning (Nim), unsupervised learning to solve various problems
+6. Neural Network, training neural network to catogrise road sign (traffic)
+7. Language,
