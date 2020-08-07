@@ -13,11 +13,11 @@ P -> "at" | "before" | "in" | "of" | "on" | "to"
 V -> "arrived" | "came" | "chuckled" | "had" | "lit" | "said" | "sat"
 V -> "smiled" | "tell" | "were"
 NP -> N | Det N | Adj N | Det Adj N
-VP -> V NP | Adv V | Adv V NP
+VP -> V | V NP | Adv V NP
 """
 
 NONTERMINALS = """
-S -> N V
+S -> NP VP
 
 """
 
@@ -83,6 +83,7 @@ def np_chunk(tree):
     whose label is "NP" that does not itself contain any other
     noun phrases as subtrees.
     """
+    
     raise NotImplementedError
 
 
