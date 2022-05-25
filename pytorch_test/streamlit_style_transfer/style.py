@@ -42,4 +42,4 @@ def stylize(style_model, content_image, output_path):
 
     with torch.no_grad():
         output = style_model(image).cpu()
-    utils.save_image(output[0], output_path)
+    utils.save_image(output_path, output[0])
