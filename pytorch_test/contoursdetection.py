@@ -2,7 +2,7 @@
 
 import cv2
 import numpy
-from stackimages import stackImages
+
 
 def getContours(img, imgContour, areaThreshold):
     # find contours in the image
