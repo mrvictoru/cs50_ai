@@ -19,8 +19,8 @@ def main():
     # create Trackbar for Thrshold1 and Threshold2
     cv2.namedWindow("Parameters")
     cv2.resizeWindow("Parameters", 800, 240)
-    cv2.createTrackbar("Threshold1", "Parameters", 0, 255, empty)
-    cv2.createTrackbar("Threshold2", "Parameters", 0, 255, empty)
+    cv2.createTrackbar("Threshold1", "Parameters", 210, 255, empty)
+    cv2.createTrackbar("Threshold2", "Parameters", 120, 255, empty)
     
     # read and display frame, press q to quit
     while True:
@@ -34,10 +34,16 @@ def main():
         threshold1 = cv2.getTrackbarPos("Threshold1", "Parameters")
         threshold2 = cv2.getTrackbarPos("Threshold2", "Parameters")
         imgCanny = cv2.Canny(imgGray, threshold1, threshold2)
+
+        # dilate canny edge image
+        kernel = np.ones((5,5))
+        imgDialted = cv2.dilate(imgCanny, kernel, iterations=1)
         
+        # use getContours to get contours and display them on the original image
+        imgContour, imgDetect = getContours(img, imgDialted, 200)
 
         # create stack of images and display it
-        imgStack = stackImages(0.8, ([img, imgGray]))
+        imgStack = stackImages(0.8, ([img, imgGray,imgCanny], [imgDialted, imgContour ,imgDetect]))
         cv2.imshow("Stack", imgStack)
 
         # press q to quit
