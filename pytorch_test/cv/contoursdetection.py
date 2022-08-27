@@ -1,4 +1,4 @@
-# real time shape detection using contours
+# this function return img with contours and img with bounding rectangle and area of the contour on the original image
 
 import cv2
 import numpy
