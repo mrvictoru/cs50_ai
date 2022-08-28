@@ -19,17 +19,19 @@ def main():
     # create Trackbar for Thrshold1 and Threshold2
     cv2.namedWindow("Parameters")
     cv2.resizeWindow("Parameters", 800, 240)
-    cv2.createTrackbar("Threshold1", "Parameters", 0.0001, 0.9999, empty)
+    cv2.createTrackbar("Threshold1", "Parameters", 1, 99, empty)
 
     
     # read and display frame, press q to quit
     while True:
         success, img = cap.read()
+        width = int(cap.get(3))
+        height = int(cap.get(4))
         # use threadhold for model threshold
-        threshold1 = cv2.getTrackbarPos("Threshold1", "Parameters")
+        threshold1 = cv2.getTrackbarPos("Threshold1", "Parameters")*0.01
 
         # use getobject to get bounding box and display them on the original image
-        imgDetect = getobject(img, threshold1)
+        imgDetect = getobject(img, height, width, threshold1)
         
         # create stack of images and display it
         imgStack = stackImages(0.8, ([img, imgDetect]))

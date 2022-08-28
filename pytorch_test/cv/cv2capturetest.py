@@ -10,6 +10,7 @@ while True:
     ret, frame = cap.read()
     width = int(cap.get(3))
     height = int(cap.get(4))
+    print(width, height)
 
     cv2.imshow('frame', frame)
 
