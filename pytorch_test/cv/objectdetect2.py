@@ -25,13 +25,11 @@ def main():
     # read and display frame, press q to quit
     while True:
         success, img = cap.read()
-        width = int(cap.get(3))
-        height = int(cap.get(4))
         # use threadhold for model threshold
         threshold1 = cv2.getTrackbarPos("Threshold1", "Parameters")*0.01
 
         # use getobject to get bounding box and display them on the original image
-        imgDetect = getobject(img, height, width, threshold1)
+        imgDetect = getobject(img, threshold1)
         
         # create stack of images and display it
         imgStack = stackImages(0.8, ([img, imgDetect]))
