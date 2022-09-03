@@ -3,12 +3,15 @@
 import cv2
 import numpy as np
 from stackimages import stackImages
-from detrdetect import getobject
+from detrdetect import DETR
 
 def empty(a):
     pass
 
 def main():
+    # create model object DETR
+    detectobj = DETR()
+
     # create video capture object
     frameWidth = 640
     frameHeight = 480
@@ -29,7 +32,7 @@ def main():
         threshold1 = cv2.getTrackbarPos("Threshold1", "Parameters")*0.01
 
         # use getobject to get bounding box and display them on the original image
-        imgDetect = getobject(img, threshold1)
+        imgDetect = detectobj.getobject(ogimg = img, threshold = threshold1)
         
         # create stack of images and display it
         imgStack = stackImages(0.8, ([img, imgDetect]))

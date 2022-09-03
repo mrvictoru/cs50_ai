@@ -6,7 +6,6 @@ import torch
 import cv2
 import time
 
-model_name = "facebook/detr-resnet-50"
 
 # turn cv2 image to PIL image
 def cv2pil(img):
@@ -14,15 +13,14 @@ def cv2pil(img):
 
 # make class for creating model and feature extractor
 class DETR:
-    def __init__(self):
+    def __init__(self, model_name = "facebook/detr-resnet-50"):
         # create model and feature extractor
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.feature_extractor = DetrFeatureExtractor.from_pretrained(model_name)
         self.model = DetrForObjectDetection.from_pretrained(model_name)
         self.model.to(self.device)
-        
 
-    def getobject(self,ogimg,threshold=0.9,test=False):
+    def getobject(self,ogimg = [],threshold=0.9,test=False):
         # get time delta
         start = time.time()
 
