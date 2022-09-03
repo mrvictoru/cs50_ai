@@ -26,21 +26,17 @@ class DETR:
 
         # create copy of input for cv2 to draw on
         imgDetect = ogimg.copy()
-        print("time delta 1 (copy image): ",time.time()-start)
 
         # convert input image to PIL image for model input
         pilimg = cv2pil(ogimg)
-        print("time delta 2 (cv2pil): ",time.time()-start)
 
         # inferenceogimg
         inputs = self.feature_extractor(images = pilimg, return_tensors = "pt").to(self.device)
         outputs = self.model(**inputs)
-        print("time delta 3 (inference): ",time.time()-start)
-
+ 
         # convert outputs (bounding boxes and class logits) to COCO API
         target_sizes = torch.tensor([pilimg.size[::-1]]).to(self.device)
         results = self.feature_extractor.post_process(outputs, target_sizes)[0]
-        print("time delta 4 (convert to coco): ",time.time()-start)
 
         resultsboxes = []
 

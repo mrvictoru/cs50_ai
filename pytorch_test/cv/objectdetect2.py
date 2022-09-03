@@ -11,6 +11,7 @@ def empty(a):
 def main():
     # create model object DETR
     detectobj = DETR()
+    print("{} model loaded".format(detectobj.model.config.model_type))
 
     # create video capture object
     frameWidth = 640
