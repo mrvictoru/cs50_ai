@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+import pandas as pd
+import pandas_datareader as web
 
 # define custom dataset
 class SequenceDataset(torch.utils.data.Dataset):
@@ -47,7 +49,7 @@ class ShallowRegressionLSTM(nn.Module):
         out = self.linear(hn[0]).flatten() #first dim of hn is the layer dimension
         return out
 
-# define training function and testing function
+# define training model function
 def train(model, loader, loss, optimizer, device):
     model.train()
     train_loss = 0
@@ -63,7 +65,8 @@ def train(model, loader, loss, optimizer, device):
 
     avg_loss = train_loss / len(loader)
     print(f"Train loss: {avg_loss:.4f}")
-    
+
+# define testing model function
 def test(model, loader, loss, device):
     model.eval()
     test_loss = 0
@@ -77,3 +80,41 @@ def test(model, loader, loss, device):
 
     avg_loss = test_loss / len(loader)
     print(f"Test loss: {avg_loss:.4f}")
+
+# define read web stock data function
+def get_stock_data(stock_name = 'TSLA', source = 'yahoo', past_year = 2):
+    # Get the past stock price
+    # today's date
+    today = pd.to_datetime('today').strftime('%Y-%m-%d')
+    # get start date
+    start = pd.to_datetime('today') - pd.DateOffset(years=past_year)
+    return web.DataReader(stock_name, data_source=source, start=start, end=today)
+
+# define function to split train and test data
+def split_train_test(training_target = "Close", df = pd.DataFrame(), train_ratio = 0.8):
+
+    feature = list(df.columns.difference([training_target]))
+
+    forecast_lead = 1
+    target = f"{training_target}_t+{forecast_lead}"
+
+    df[target] = df[training_target].shift(-forecast_lead)
+    df = df.iloc[:-forecast_lead]
+
+    # split data
+    train_size = int(len(df) * train_ratio)
+    test_size = len(df) - train_size
+    train, test = df.iloc[0:train_size].copy(), df.iloc[train_size:len(df)].copy()
+
+    # standardize data
+    target_mean = train[target].mean()
+    target_std = train[target].std()
+
+    for c in train.columns:
+        mean = train[c].mean()
+        std = train[c].std()
+
+        train[c] = (train[c] - mean) / std
+        test[c] = (test[c] - mean) / std
+    
+    return train, test, feature, target, train_size, test_size, target_mean, target_std
