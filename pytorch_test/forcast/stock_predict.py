@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 import pandas as pd
 import pandas_datareader as web
+import numpy as np
+# import library for Support Vector Classification
+from sklearn.svm import SVC
 
 # define custom dataset
 class SequenceDataset(torch.utils.data.Dataset):
@@ -81,6 +84,18 @@ def test(model, loader, loss, device):
     avg_loss = test_loss / len(loader)
     print(f"Test loss: {avg_loss:.4f}")
 
+# get predictions
+def predict(loader, model, device):
+    output = torch.tensor([]).to(device)
+    model.eval()
+    with torch.no_grad():
+        for x, _ in loader:
+            x = x.to(device)
+            y_pred = model(x)
+            output = torch.cat((output, y_pred), dim=0)
+    
+    return output.cpu().numpy()
+
 # define read web stock data function
 def get_stock_data(stock_name = 'TSLA', source = 'yahoo', past_year = 2):
     # Get the past stock price
@@ -118,3 +133,33 @@ def split_train_test(training_target = "Close", df = pd.DataFrame(), train_ratio
         test[c] = (test[c] - mean) / std
     
     return train, test, feature, target, train_size, test_size, target_mean, target_std
+
+def svm_train(df):
+    # Create the independent variables
+    df['High-Low'] = df['High'] - df['Low']
+    df['Open-Close'] = df['Open'] - df['Close']
+    # Store the independent variables in a new variable called 'X'
+    X = df[['High-Low', 'Open-Close', 'Close']]
+    # Store target variable in a new variable called 'y': if tomorrows close price is greater than todays close price, then y = 1, else y = 0
+    # 1 indicate to buy by today closing and sell by tomorrow closing and 0 indicates no action
+    y = np.where(df['Close'].shift(-1) > df['Close'], 1, 0)
+
+    # Get the percentage to split the data into training (90%) and testing sets (10%)
+    split_percentage = 0.9
+    row = int(df.shape[0] * split_percentage)
+
+    # Cretate the training data set
+    X_train = X[:row]
+    y_train = y[:row]
+
+    # Create the testing data set
+    X_test = X[row:]
+    y_test = y[row:]
+
+    # Create model
+    model = SVC()
+
+    # Train the model
+    model.fit(X_train[['Open-Close','High-Low']], y_train)
+
+    return model
