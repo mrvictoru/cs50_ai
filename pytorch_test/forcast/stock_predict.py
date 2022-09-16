@@ -152,10 +152,6 @@ def svm_train(df):
     X_train = X[:row]
     y_train = y[:row]
 
-    # Create the testing data set
-    X_test = X[row:]
-    y_test = y[row:]
-
     # Create model
     model = SVC()
 
