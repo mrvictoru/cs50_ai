@@ -107,19 +107,19 @@ def get_stock_data(stock_name = 'TSLA', source = 'yahoo', past_year = 2):
 
 # define function to split train and test data
 def split_train_test(training_target = "Close", df = pd.DataFrame(), train_ratio = 0.8):
-
+    df_split = df.copy()
     feature = list(df.columns.difference([training_target]))
 
     forecast_lead = 1
     target = f"{training_target}_t+{forecast_lead}"
 
-    df[target] = df[training_target].shift(-forecast_lead)
-    df = df.iloc[:-forecast_lead]
+    df_split[target] = df_split[training_target].shift(-forecast_lead)
+    df_split = df_split.iloc[:-forecast_lead]
 
     # split data
-    train_size = int(len(df) * train_ratio)
-    test_size = len(df) - train_size
-    train, test = df.iloc[0:train_size].copy(), df.iloc[train_size:len(df)].copy()
+    train_size = int(len(df_split) * train_ratio)
+    test_size = len(df_split) - train_size
+    train, test = df_split.iloc[0:train_size].copy(), df_split.iloc[train_size:len(df)].copy()
 
     # standardize data
     target_mean = train[target].mean()
@@ -134,19 +134,21 @@ def split_train_test(training_target = "Close", df = pd.DataFrame(), train_ratio
     
     return train, test, feature, target, train_size, test_size, target_mean, target_std
 
-def svm_train(df):
+def svc_train(df):
+    # create copy of dataframe
+    df_train = df.copy()
     # Create the independent variables
-    df['High-Low'] = df['High'] - df['Low']
-    df['Open-Close'] = df['Open'] - df['Close']
+    df_train['High-Low'] = df_train['High'] - df_train['Low']
+    df_train['Open-Close'] = df_train['Open'] - df_train['Close']
     # Store the independent variables in a new variable called 'X'
-    X = df[['High-Low', 'Open-Close', 'Close']]
+    X = df_train[['High-Low', 'Open-Close', 'Close']]
     # Store target variable in a new variable called 'y': if tomorrows close price is greater than todays close price, then y = 1, else y = 0
     # 1 indicate to buy by today closing and sell by tomorrow closing and 0 indicates no action
-    y = np.where(df['Close'].shift(-1) > df['Close'], 1, 0)
+    y = np.where(df_train['Close'].shift(-1) > df_train['Close'], 1, 0)
 
     # Get the percentage to split the data into training (90%) and testing sets (10%)
     split_percentage = 0.9
-    row = int(df.shape[0] * split_percentage)
+    row = int(df_train.shape[0] * split_percentage)
 
     # Cretate the training data set
     X_train = X[:row]
@@ -159,3 +161,12 @@ def svm_train(df):
     model.fit(X_train[['Open-Close','High-Low']], y_train)
 
     return model
+
+def svc_pred(df_in, model):
+    # create copy of dataframe
+    df = df_in.copy()
+
+    df['High-Low'] = df['High'] - df['Low']
+    df['Open-Close'] = df['Open'] - df['Close']
+    # Make and show the model predictions
+    return model.predict(df[['Open-Close','High-Low']])
