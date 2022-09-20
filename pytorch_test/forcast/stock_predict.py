@@ -162,11 +162,3 @@ def svc_train(df):
 
     return model
 
-def svc_pred(df_in, model):
-    # create copy of dataframe
-    df = df_in.copy()
-
-    df['High-Low'] = df['High'] - df['Low']
-    df['Open-Close'] = df['Open'] - df['Close']
-    # Make and show the model predictions
-    return model.predict(df[['Open-Close','High-Low']])
