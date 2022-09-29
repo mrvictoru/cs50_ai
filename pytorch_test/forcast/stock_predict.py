@@ -134,6 +134,29 @@ def split_train_test(training_target = "Close", df = pd.DataFrame(), train_ratio
     
     return train, test, feature, target, train_size, test_size, target_mean, target_std
 
+# define function to split train and test data with binary action as target
+def split_train_test_binary(df = pd.DataFrame(), train_ratio = 0.8):
+    df_split = df.copy()
+    # create binary action target
+    y = np.where(df['Close'].shift(-1) > df['Close'], 1, 0)
+    df_split['action'] = y
+
+    # split data
+    train_size = int(len(df_split) * train_ratio)
+    test_size = len(df_split) - train_size
+    train, test = df_split.iloc[0:train_size].copy(), df_split.iloc[train_size:len(df)].copy()
+
+    # standardize data
+
+    for c in train.columns:
+        mean = train[c].mean()
+        std = train[c].std()
+
+        train[c] = (train[c] - mean) / std
+        test[c] = (test[c] - mean) / std
+    
+    return train, test, train_size, test_size, y
+
 def svc_train(df):
     # create copy of dataframe
     df_train = df.copy()
