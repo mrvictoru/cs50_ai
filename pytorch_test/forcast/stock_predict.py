@@ -96,6 +96,21 @@ def predict(loader, model, device):
     
     return output.cpu().numpy()
 
+# get predictions for binary action
+def predict_binary(loader, model, device):
+    output = torch.tensor([]).to(device)
+    model.eval()
+    with torch.no_grad():
+        for x, _ in loader:
+            x = x.to(device)
+            y_pred = model(x)
+            y_pred = torch.sigmoid(y_pred)
+            # convert to binary
+            y_pred = torch.round(y_pred)
+            output = torch.cat((output, y_pred), dim=0)
+    
+    return output.cpu().numpy()
+
 # define read web stock data function
 def get_stock_data(stock_name = 'TSLA', source = 'yahoo', past_year = 2):
     # Get the past stock price
@@ -139,7 +154,7 @@ def split_train_test_binary(df = pd.DataFrame(), train_ratio = 0.8):
     df_split = df.copy()
     # create binary action target
     y = np.where(df['Close'].shift(-1) > df['Close'], 1, 0)
-    df_split['action'] = y
+    df_split['perfect'] = y
 
     # split data
     train_size = int(len(df_split) * train_ratio)
@@ -149,11 +164,12 @@ def split_train_test_binary(df = pd.DataFrame(), train_ratio = 0.8):
     # standardize data
 
     for c in train.columns:
-        mean = train[c].mean()
-        std = train[c].std()
+        if c != 'perfect':
+            mean = train[c].mean()
+            std = train[c].std()
 
-        train[c] = (train[c] - mean) / std
-        test[c] = (test[c] - mean) / std
+            train[c] = (train[c] - mean) / std
+            test[c] = (test[c] - mean) / std
     
     return train, test, train_size, test_size, y
 
