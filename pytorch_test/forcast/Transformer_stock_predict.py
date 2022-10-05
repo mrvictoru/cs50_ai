@@ -1,5 +1,6 @@
 # Class for transformer model and related functions such as positional encoding and dataset
 
+from collections.abc import Sequence
 import torch
 import torch.nn as nn
 import math
@@ -137,12 +138,43 @@ class TransformerDataset(torch.utils.data.Dataset):
                         2) the end index of a sub-sequence
                         The sub-sequence is split into src, trg and trg_y later
 
-            enc_seq_len: int, length of the encoder sequence
-            dec_seq_len: int, length of the decoder sequence
-            target_seq_len: int, length of the target sequence
+            enc_seq_len: int, length of input sequence given to the encoder layer of the transformer model.
+
+            dec_seq_len: int, length of input sequence given to the decoder layer of the transformer model.
+
+            target_seq_len: int, length of the target sequence (the output of the model)
+
+            target_idx: the index position of the target variable in data. (Data is a 2D tensor)
         """
+        super().__init__()
         self.data = data
         self.indices = indices
+        print("From get_src_trg: data size = {}".format(data.size()))
+
         self.enc_seq_len = enc_seq_len
         self.dec_seq_len = dec_seq_len
         self.target_seq_len = target_seq_len
+
+    def __len__(self):
+        return len(self.indices)
+    
+    def __getitem__(self, idx):
+        """
+        Returns a tuple with 3 elements:
+        1) src (the encoder input)
+        2) trg (the decoder input)
+        3) trg_y (the target sequence)
+        """
+        # get teh first element of the idx-th tuple in indices
+        start_idx = self.indices[idx][0]
+        # get the second (and last) element of the idx-th tuple in indices
+        end_idx = self.indices[idx][1]
+
+        sequence = self.data[start_idx:end_idx]
+
+        src,trg,trg_y = self.get_src_trg(sequence, self.enc_seq_len, self.dec_seq_len, self.target_seq_len)
+        
+        return src, trg, trg_y
+    
+    def get_src_trg(self,sequence:torch.Tensor, enc_seq_len: int, dec_seq_len: int, target_seq_len: int) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
+        
