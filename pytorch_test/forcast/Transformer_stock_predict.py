@@ -1,9 +1,10 @@
-# Class for transformer model and positional encoder
+# Class for transformer model and related functions such as positional encoding and dataset
 
 import torch
 import torch.nn as nn
 import math
 from torch import nn, Tensor
+
 
 class PositionalEncoder(nn.Module):
     def __init__(self, d_model: int = 512, dropout: float = 0.1, max_len: int = 5000, batch_first: bool = False):
@@ -104,12 +105,16 @@ class TimeSeriesTransformer(nn.Module):
         # encode the input sequence
         # pass through the input layer right before the encoder
         src = self.encoder_input_layer(src)
+        # pass through the positional encoding layer
         src = self.pos_encoder(src)
-        src = self.encoder(src, src_mask)
+        # pass through all the stacked encoder layers in the encoder
+        # masking is not needed as input sequences are of the same length
+        src = self.encoder(src)
 
         # decode the encoded sequence
         tgt = self.decoder_input_layer(tgt)
-        tgt = self.pos_encoder(tgt)
+
+        # pass through all the stacked decoder layers in the decoder
         tgt = self.decoder(tgt, src, tgt_mask, src_mask)
 
         # map the output to the desired output size
@@ -117,4 +122,27 @@ class TimeSeriesTransformer(nn.Module):
 
         return output
 
+# Dataset class used for transformer models
+class TransformerDataset(torch.utils.data.Dataset):
+    def __init__(self, data: torch.tensor, indices: list, enc_seq_len: int, dec_seq_len: int, target_seq_len: int) -> None:
+        """
+        Args:
+            data:   tensor, the entire train, validation or test data squences
+                    before any slicing. if univariate the shape will be [num_samples, num_features]
+                    where the number of feature will be 1 + number of exogenous variables.
+                    Number of exogenous variables would be 0 if univariate
 
+            indices:    list of tuples, Each tuple has two elements:
+                        1) the start index of a sub-sequence
+                        2) the end index of a sub-sequence
+                        The sub-sequence is split into src, trg and trg_y later
+
+            enc_seq_len: int, length of the encoder sequence
+            dec_seq_len: int, length of the decoder sequence
+            target_seq_len: int, length of the target sequence
+        """
+        self.data = data
+        self.indices = indices
+        self.enc_seq_len = enc_seq_len
+        self.dec_seq_len = dec_seq_len
+        self.target_seq_len = target_seq_len
