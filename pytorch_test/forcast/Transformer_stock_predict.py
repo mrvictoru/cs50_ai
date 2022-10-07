@@ -1,10 +1,11 @@
 # Class for transformer model and related functions such as positional encoding and dataset
-
+# see https://github.com/KasperGroesLudvigsen/influenza_transformer for reference
 from collections.abc import Sequence
 import torch
 import torch.nn as nn
 import math
 from torch import nn, Tensor
+from typing import Tuple
 
 
 class PositionalEncoder(nn.Module):
@@ -177,4 +178,25 @@ class TransformerDataset(torch.utils.data.Dataset):
         return src, trg, trg_y
     
     def get_src_trg(self,sequence:torch.Tensor, enc_seq_len: int, dec_seq_len: int, target_seq_len: int) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
-        
+        """
+        Generate the src (encoder input), trg (decoder input) and trg_y (the target) sequences from a sequence.
+        Args:
+            sequence: tensor, a 1D tensor of length n where n = encoder input length + target sequence length
+            enc_seq_len: int, length of input sequence given to the encoder layer of the transformer model.
+            target_seq_len: int, desired length of the target sequence (the one against which  the model output is compared)
+        Returns:
+            src: tensor, 1D, input to the model
+            trg: tensor, 1D, input to the model
+            trg_y: tensor, the target sequence against which  the model output is compared when calculating the loss
+        """
+        # get the encoder input sequence
+        src = sequence[:enc_seq_len]
+        # get the decoder input sequence (same dimension as the target sequence, must contain the last value of src, and all values of trg_y except the last, i.e. it must be shifted right by 1)
+        trg = sequence[enc_seq_len-1:len(sequence)-1]
+        # get the target sequence
+        trg_y = sequence[-target_seq_len:]
+
+        assert len(trg_y) == target_seq_len, "trg_y length does not match target_seq_len"
+
+        return src, trg, trg_y.squeeze(-1) # change size from [batch_size, target_seq_len, num_features] to [batch_size, target_seq_len]
+
