@@ -3,8 +3,6 @@ import torch.nn as nn
 import pandas as pd
 import pandas_datareader as web
 import numpy as np
-# import library for Support Vector Classification
-from sklearn.svm import SVC
 
 # define custom dataset
 class SequenceDataset(torch.utils.data.Dataset):
