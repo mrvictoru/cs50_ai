@@ -72,8 +72,9 @@ def get_stock_data_yf_between_with_indicators(stock_name, start_date, end_date, 
     """
     data = yf.download(stock_name, start=start_date, end=end_date, interval=interval)
     data = to_numeric_and_downcast_data(data)
-    df = ta.add_all_ta_features(data, open="Open", high="High", low="Low", close="Close", volume="Volume", fillna=True)
-    # add the indicators from df to data
-    for indicator in indicators:
-        data[indicator] = df[indicator]
+    data = ta.add_all_ta_features(data, open="Open", high="High", low="Low", close="Close", volume="Volume", fillna=True)
+    # remove columns that is not in the indicators
+    for col in data.columns:
+        if col not in indicators and col not in ['Open', 'High', 'Low', 'Close', 'Volume']:
+            data = data.drop(col, axis=1)
     return data
