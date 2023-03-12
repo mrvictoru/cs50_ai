@@ -23,12 +23,14 @@ from getstock import *
 class StockTradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, df):
+    def __init__(self, df, init_balance, max_step):
         super(StockTradingEnv, self).__init__()
 
         # data
         self.df = df
         self.reward_range = (0, 1000)
+        self.init_balance = init_balance
+        self.max_step = max_step
 
         # action space (buy x%, sell x%, hold)
         self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([3, 1]), dtype=np.float16)
@@ -38,9 +40,9 @@ class StockTradingEnv(gym.Env):
 
     # reset the state of the environment to an initial state
     def reset(self):
-        self.balance = INITIAL_ACCOUNT_BALANCE
-        self.net_worth = INITIAL_ACCOUNT_BALANCE
-        self.max_net_worth = INITIAL_ACCOUNT_BALANCE
+        self.balance = self.init_balance
+        self.net_worth = self.init_balance
+        self.max_net_worth = self.init_balance
         self.shares_held = 0
         self.cost_basis = 0
         self.total_shares_sold = 0
@@ -51,23 +53,17 @@ class StockTradingEnv(gym.Env):
         return self._next_observation()
 
     def _next_observation(self):
-        # get the data points for the last 5 days and scale to between 0-1
-        frame = np.array([
-            self.df.loc[self.current_step: self.current_step + 5, 'Open'].values / MAX_SHARE_PRICE,
-            self.df.loc[self.current_step: self.current_step + 5, 'High'].values / MAX_SHARE_PRICE,
-            self.df.loc[self.current_step: self.current_step + 5, 'Low'].values / MAX_SHARE_PRICE,
-            self.df.loc[self.current_step: self.current_step + 5, 'Close'].values / MAX_SHARE_PRICE,
-            self.df.loc[self.current_step: self.current_step + 5, 'Volume'].values / MAX_NUM_SHARES
-        ])
+        # get the features from the data frame for current time step
+        frame = self.df.iloc[self.current_step].values
 
-        # append additional data and scale each value to between 0-1
+        # append additional data
         obs = np.append(frame, [[
-            self.balance / MAX_ACCOUNT_BALANCE,
-            self.max_net_worth / MAX_ACCOUNT_BALANCE,
-            self.shares_held / MAX_NUM_SHARES,
-            self.cost_basis / MAX_SHARE_PRICE,
-            self.total_shares_sold / MAX_NUM_SHARES,
-            self.total_sales_value / (MAX_NUM_SHARES * MAX_SHARE_PRICE),
+            self.balance,
+            self.max_net_worth,
+            self.shares_held,
+            self.cost_basis,
+            self.total_shares_sold,
+            self.total_sales_value,
         ]], axis=0)
 
         return obs
@@ -83,7 +79,7 @@ class StockTradingEnv(gym.Env):
             self.current_step = 0
 
         # calculate reward based on the balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
-        delay_modifier = (self.current_step / MAX_STEPS)
+        delay_modifier = (self.current_step / self.max_step)
         reward = self.balance * delay_modifier
         done = self.net_worth <= 0
 
@@ -127,7 +123,7 @@ class StockTradingEnv(gym.Env):
     
     def render(self, mode='human', close=False):
         # Render the environment to the screen
-        profit = self.net_worth - INITIAL_ACCOUNT_BALANCE
+        profit = self.net_worth - self.init_balance
 
         print(f'Step: {self.current_step}')
         print(f'Balance: {self.balance}')
