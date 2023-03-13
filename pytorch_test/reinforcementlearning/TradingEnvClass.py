@@ -7,6 +7,8 @@ the reset function will reset the environment to the initial state
 see https://towardsdatascience.com/creating-a-custom-openai-gym-environment-for-stock-trading-be532be3910e for more details
 """
 
+MAX_ACCOUNT_BALANCE = 2147483647
+
 # import the necessary packages
 import gym
 from gym.envs.registration import register
@@ -23,14 +25,15 @@ from getstock import *
 class StockTradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, df, init_balance, max_step):
+    def __init__(self, df, init_balance, max_step, random = True):
         super(StockTradingEnv, self).__init__()
 
         # data
         self.df = df
-        self.reward_range = (0, 1000)
+        self.reward_range = (0, MAX_ACCOUNT_BALANCE)
         self.init_balance = init_balance
         self.max_step = max_step
+        self.random = random
 
         # action space (buy x%, sell x%, hold)
         self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([3, 1]), dtype=np.float16)
@@ -47,9 +50,12 @@ class StockTradingEnv(gym.Env):
         self.cost_basis = 0
         self.total_shares_sold = 0
         self.total_sales_value = 0
-
-        # set the current step to a random point within the data frame
-        self.current_step = np.random.randint(0, len(self.df.loc[:, 'Open'].values) - 6)
+        
+        if self.random:
+            # set the current step to a random point within the data frame
+            self.current_step = np.random.randint(0, len(self.df.loc[:, 'Open'].values) - 6)
+        else:
+            self.current_step = 0
         return self._next_observation()
 
     def _next_observation(self):
@@ -57,14 +63,14 @@ class StockTradingEnv(gym.Env):
         frame = self.df.iloc[self.current_step].values
 
         # append additional data
-        obs = np.append(frame, [[
+        obs = np.append(frame, [
             self.balance,
             self.max_net_worth,
             self.shares_held,
             self.cost_basis,
             self.total_shares_sold,
             self.total_sales_value,
-        ]], axis=0)
+        ], axis=0)
 
         return obs
 
