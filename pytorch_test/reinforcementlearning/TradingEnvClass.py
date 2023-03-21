@@ -1,5 +1,4 @@
 """
-this script contain a custom open ai environment class for stock trading
 this trading environment class is able to take in a time series of stock data with abritrary number of features and create state space
 the step function will take in an action (which is the number of shares to buy or sell) and output the next state, reward and done
 the reset function will reset the environment to the initial state
