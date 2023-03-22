@@ -99,4 +99,49 @@ class DecisionTransformer(nn.Module):
         self.embed_rtg = nn.Linear(1, h_dim)
         self.embed_state = nn.Linear(state_dim, h_dim)
 
-        #
+        # continuous action head
+        self.embed_action = nn.Linear(act_dim, h_dim)
+        use_action_tanh = True
+
+        # # discrete action head
+        # self.embed_action = nn.Embedding(act_dim, h_dim)
+        # use_action_tanh = False
+
+        # prediction heads
+        self.pred_rtg = nn.Linear(h_dim, 1)
+        self.pred_state = nn.Linear(h_dim, state_dim)
+        self.pred_act = nn.Sequential(*([nn.Linear(h_dim, act_dim)] + ([nn.Tanh()] if use_action_tanh else [])))
+    
+    def forward(self, state, rtg, timestep, actions):
+        B, T, _ = state.shape
+
+        # timestep embedding
+        time_emb = self.embed_timestep(timestep)
+
+        # embedding for the state, reward and actions along with time embedding
+        state_emb = self.embed_state(state) + time_emb
+        rtg_emb = self.embed_rtg(rtg) + time_emb
+        act_emb = self.embed_act(actions)
+        if act_emb.shape != time_emb.shape:
+            act_emb = torch.squeeze(act_emb) # fix the unmatch dimension
+        act_emb = act_emb + time_emb
+
+        # stack the embeddings and reshape sequence as (r1, s1, a1, r2, s2, a2, ...)
+        h = torch.stack([rtg_emb, state_emb, act_emb], dim=1).permute(0,2,1,3).reshape(B, 3*T, self.h_dim)
+        h = self.embed_ln(h)
+
+        # transformer blocks
+        h = self.transformer(h)
+
+        # get h reshaped such that its size is (B, 3, T, h_dim) and
+        # h[:, 0, t] is conditioned on r_0, s_0, a_0, ..., r_t
+        # h[:, 1, t] is conditioned on r_0, s_0, a_0, ..., r_t, s_t
+        # h[:, 2, t] is conditioned on r_0, s_0, a_0, ..., r_t, s_t, a_t
+        h = h.reshape(B, 3, T, self.h_dim).permute(0,2,1,3)
+
+        # get predictions
+        return_preds = self.pred_rtg(h[:,2])    # predict next rtg given r, s, a
+        state_preds = self.pred_state(h[:,2])   # predict next state given r, s, a
+        act_preds = self.pred_act(h[:,2])       # predict action given r, s
+
+        return return_preds, state_preds, act_preds
