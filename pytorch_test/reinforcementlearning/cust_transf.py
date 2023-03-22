@@ -47,7 +47,7 @@ class MaskedAttention(nn.Module):
         v = self.value(x).view(B, T, N, D).transpose(1, 2) # [batch_size, n_heads, T, D]
 
         # compute the attention
-        weights = Q @ K.transpose(2,3) / math.sqrt(D) # QK^T / sqrt(D)
+        weights = q @ k.transpose(2,3) / math.sqrt(D) # QK^T / sqrt(D)
         weights = weights.masked_fill(self.mask[:, :, :T, :T] == 0, float('-inf')) # mask the future tokens
         normalized_weights = F.softmax(weights, dim=-1) # softmax along the last dimension
         A = self.att_drop(normalized_weights @ v) # attention with dropout
