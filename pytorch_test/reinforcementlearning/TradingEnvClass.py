@@ -38,7 +38,8 @@ class StockTradingEnv(gym.Env):
         self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([3, 1]), dtype=np.float16)
 
         # observation space (prices and technical indicators)
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(len(self.df.columns),), dtype=np.float16)
+        # shape should be (n_features + 6) where 6 is the number of additional dynamic features of the environment
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(len(self.df.columns)+6,), dtype=np.float16)
 
     # reset the state of the environment to an initial state
     def reset(self):
