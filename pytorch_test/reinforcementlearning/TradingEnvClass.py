@@ -101,13 +101,19 @@ class StockTradingEnv(gym.Env):
             # buy amount % of balance in shares
             total_possible = self.balance / execute_price
             # shares bought rounded to integer
-            shares_bought = int(total_possible * amount)
+            shares_bought = int(total_possible * amount)  
 
             prev_cost = self.cost_basis * self.shares_held
             additional_cost = shares_bought * execute_price
 
             self.balance -= additional_cost
-            self.cost_basis = (prev_cost + additional_cost) / (self.shares_held + shares_bought)
+            # check if shares bought is 0
+            if shares_bought == 0:
+                self.cost_basis = 0
+            else:
+                # calculate the new cost basis
+                self.cost_basis = (prev_cost + additional_cost) / (self.shares_held + shares_bought)
+            
             self.shares_held += shares_bought
 
         elif action_type < 2:
