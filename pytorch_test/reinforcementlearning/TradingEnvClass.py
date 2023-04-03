@@ -35,7 +35,7 @@ class StockTradingEnv(gym.Env):
         self.random = random
 
         # action space (buy x%, sell x%, hold)
-        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([3, 1]), dtype=np.float16)
+        self.action_space = spaces.Box(low=np.array([0, 0.01]), high=np.array([3, 0.99]), dtype=np.float16)
 
         # observation space (prices and technical indicators)
         # shape should be (n_features + 6) where 6 is the number of additional dynamic features of the environment
@@ -101,24 +101,25 @@ class StockTradingEnv(gym.Env):
             # buy amount % of balance in shares
             total_possible = self.balance / execute_price
             # shares bought rounded to integer
-            shares_bought = int(total_possible * amount)  
+            shares_bought = int(total_possible * amount)
+            # if shares bought is 0 then make it one
+            if shares_bought < 1:
+                shares_bought = 1  
 
             prev_cost = self.cost_basis * self.shares_held
             additional_cost = shares_bought * execute_price
 
             self.balance -= additional_cost
-            # check if shares bought is 0
-            if shares_bought == 0:
-                self.cost_basis = 0
-            else:
-                # calculate the new cost basis
-                self.cost_basis = (prev_cost + additional_cost) / (self.shares_held + shares_bought)
+            self.cost_basis = (prev_cost + additional_cost) / (self.shares_held + shares_bought)
             
             self.shares_held += shares_bought
 
         elif action_type < 2:
             # sell amount % of shares held (rounded to interger)
             shares_sold = int(self.shares_held * amount)
+            # if shares sold is 0 then make it one unless we have no shares
+            if shares_sold < 1 and self.shares_held > 0:
+                shares_sold = 1
             self.balance += shares_sold * execute_price
             self.shares_held -= shares_sold
             self.total_shares_sold += shares_sold
@@ -142,4 +143,10 @@ class StockTradingEnv(gym.Env):
         print(f'Avg cost for held shares: {self.cost_basis} (Total sales value: {self.total_sales_value})')
         print(f'Net worth: {self.net_worth} (Max net worth: {self.max_net_worth})')
         print(f'Profit: {profit}')
+
+        # print out the current stock price
+        print(self.df.iloc[self.current_step])
+
+        # print obs
+        print(self._next_observation())
         
