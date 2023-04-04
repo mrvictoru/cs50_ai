@@ -34,6 +34,9 @@ class StockTradingEnv(gym.Env):
         self.max_step = max_step
         self.random = random
 
+        # normalize the data
+        self.df_standard = (df - df.mean()) / df.std()
+
         # action space (buy x%, sell x%, hold)
         self.action_space = spaces.Box(low=np.array([0, 0.01]), high=np.array([3, 0.99]), dtype=np.float16)
 
@@ -62,6 +65,23 @@ class StockTradingEnv(gym.Env):
         # get the features from the data frame for current time step
         frame = self.df.iloc[self.current_step].values
 
+        # append additional data
+        obs = np.append(frame, [
+            self.balance,
+            self.max_net_worth,
+            self.shares_held,
+            self.cost_basis,
+            self.total_shares_sold,
+            self.total_sales_value,
+        ], axis=0)
+
+        return obs
+    
+    def _next_observation_norm(self):
+        # get the features from the data frame for current time step
+        frame = self.df_standard.iloc[self.current_step].values
+
+        # To-do normalize the additional data
         # append additional data
         obs = np.append(frame, [
             self.balance,
@@ -118,7 +138,7 @@ class StockTradingEnv(gym.Env):
             # sell amount % of shares held (rounded to interger)
             shares_sold = int(self.shares_held * amount)
             # if shares sold is 0 then make it one unless we have no shares
-            if shares_sold < 1 and self.shares_held > 0:
+            if shares_sold < 1:
                 shares_sold = 1
             self.balance += shares_sold * execute_price
             self.shares_held -= shares_sold
@@ -132,6 +152,18 @@ class StockTradingEnv(gym.Env):
 
         if self.shares_held == 0:
             self.cost_basis = 0
+    
+    def is_valid_action(self, action):
+        # Check if the action is valid, for example if we hold no stocks, we can't sell any;
+        # return True if the action is valid, False otherwise
+        valid = True
+        
+        if action[0] > 1 and action[0] < 2:
+            if self.shares_held == 0:
+                valid = False
+            if action[1] 
+            
+            
     
     def render(self, mode='human', close=False):
         # Render the environment to the screen
@@ -147,6 +179,6 @@ class StockTradingEnv(gym.Env):
         # print out the current stock price
         print(self.df.iloc[self.current_step])
 
-        # print obs
-        print(self._next_observation())
+        # return the observation
+        return 
         
