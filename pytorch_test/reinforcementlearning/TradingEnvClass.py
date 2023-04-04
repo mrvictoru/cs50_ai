@@ -152,16 +152,18 @@ class StockTradingEnv(gym.Env):
 
         if self.shares_held == 0:
             self.cost_basis = 0
-    
+    """
     def is_valid_action(self, action):
         # Check if the action is valid, for example if we hold no stocks, we can't sell any;
         # return True if the action is valid, False otherwise
         valid = True
         
+        # complete 
         if action[0] > 1 and action[0] < 2:
             if self.shares_held == 0:
                 valid = False
             if action[1] 
+    """
             
             
     
