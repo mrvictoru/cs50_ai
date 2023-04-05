@@ -7,6 +7,8 @@ see https://towardsdatascience.com/creating-a-custom-openai-gym-environment-for-
 """
 
 MAX_ACCOUNT_BALANCE = 2147483647
+MAX_NUM_SHARES = 2147483647
+MAX_SHARE_PRICE = 5000
 
 # import the necessary packages
 import gym
@@ -35,6 +37,8 @@ class StockTradingEnv(gym.Env):
         self.random = random
 
         # normalize the data
+        self.price_mean = self.df['Close'].mean()
+        self.price_std = self.df['Close'].std()
         self.df_standard = (df - df.mean()) / df.std()
 
         # action space (buy x%, sell x%, hold)
@@ -81,15 +85,15 @@ class StockTradingEnv(gym.Env):
         # get the features from the data frame for current time step
         frame = self.df_standard.iloc[self.current_step].values
 
-        # To-do normalize the additional data
+        # normalize the additional data to avoid gradient issues.
         # append additional data
         obs = np.append(frame, [
-            self.balance,
-            self.max_net_worth,
-            self.shares_held,
-            self.cost_basis,
-            self.total_shares_sold,
-            self.total_sales_value,
+            self.balance/MAX_ACCOUNT_BALANCE,
+            self.max_net_worth/MAX_ACCOUNT_BALANCE,
+            self.shares_held/MAX_NUM_SHARES,
+            (self.cost_basis - self.price_mean)/self.price_std,
+            self.total_shares_sold/MAX_NUM_SHARES,
+            self.total_sales_value/(MAX_NUM_SHARES *MAX_SHARE_PRICE),
         ], axis=0)
 
         return obs
@@ -107,7 +111,7 @@ class StockTradingEnv(gym.Env):
         # if net_worth is below 0, or current_step is greater than max_step, then done = True
         done = self.net_worth <= 0 or self.current_step >= self.max_step
 
-        obs = self._next_observation()
+        obs = self._next_observation_norm()
 
         return obs, reward, done, {}
     
@@ -167,20 +171,19 @@ class StockTradingEnv(gym.Env):
             
             
     
-    def render(self, mode='human', close=False):
+    def render(self, print = True, mode='human', close=False):
         # Render the environment to the screen
         profit = self.net_worth - self.init_balance
-
-        print(f'Step: {self.current_step}')
-        print(f'Balance: {self.balance}')
-        print(f'Shares held: {self.shares_held} (Total sold: {self.total_shares_sold})')
-        print(f'Avg cost for held shares: {self.cost_basis} (Total sales value: {self.total_sales_value})')
-        print(f'Net worth: {self.net_worth} (Max net worth: {self.max_net_worth})')
-        print(f'Profit: {profit}')
-
-        # print out the current stock price
-        print(self.df.iloc[self.current_step])
+        if print:
+            print(f'Step: {self.current_step}')
+            print(f'Balance: {self.balance}')
+            print(f'Shares held: {self.shares_held} (Total sold: {self.total_shares_sold})')
+            print(f'Avg cost for held shares: {self.cost_basis} (Total sales value: {self.total_sales_value})')
+            print(f'Net worth: {self.net_worth} (Max net worth: {self.max_net_worth})')
+            print(f'Profit: {profit}')
+            # print out the current stock price
+            print(self.df.iloc[self.current_step])
 
         # return the observation
-        return 
+        return self._next_observation()
         
