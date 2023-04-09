@@ -41,6 +41,9 @@ class StockTradingEnv(gym.Env):
         self.price_std = self.df['Close'].std()
         self.df_standard = (df - df.mean()) / df.std()
 
+        # trade action history
+        self.action_history = []
+
         # action space (buy x%, sell x%, hold)
         self.action_space = spaces.Box(low=np.array([0, 0.01]), high=np.array([3, 0.99]), dtype=np.float16)
 
@@ -105,6 +108,7 @@ class StockTradingEnv(gym.Env):
         # Execute one time step within the environment
         self._take_action(action,execute_price)
         self.current_step += 1
+        self.action_history.append(action)
         # calculate reward based on the balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
         delay_modifier = (self.current_step / self.max_step)
         reward = self.balance * delay_modifier
@@ -186,4 +190,3 @@ class StockTradingEnv(gym.Env):
 
         # return the observation
         return self._next_observation()
-        
