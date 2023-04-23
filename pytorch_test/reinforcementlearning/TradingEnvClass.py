@@ -45,7 +45,7 @@ class StockTradingEnv(gym.Env):
         self.action_history = []
 
         # action space (buy x%, sell x%, hold)
-        self.action_space = spaces.Box(low=np.array([0, 0.01]), high=np.array([3, 0.99]), dtype=np.float16)
+        self.action_space = spaces.Box(low=np.array([-1, 0.01]), high=np.array([1, 0.99]), dtype=np.float16)
 
         # observation space (prices and technical indicators)
         # shape should be (n_features + 6) where 6 is the number of additional dynamic features of the environment
@@ -125,7 +125,9 @@ class StockTradingEnv(gym.Env):
         action_type = action[0]
         amount = action[1]
 
-        if action_type < 1:
+        # check if action_type between 2/3 and 1 then it is to buy
+        if 2/3 <= action_type <= 1:
+        
             # buy amount % of balance in shares
             total_possible = self.balance / execute_price
             # shares bought rounded to integer
@@ -142,7 +144,7 @@ class StockTradingEnv(gym.Env):
             
             self.shares_held += shares_bought
 
-        elif action_type < 2:
+        elif -1 <= action_type <= -2/3:
             # sell amount % of shares held (rounded to interger)
             shares_sold = int(self.shares_held * amount)
             # if shares sold is 0 then make it one unless we have no shares
@@ -160,19 +162,7 @@ class StockTradingEnv(gym.Env):
 
         if self.shares_held == 0:
             self.cost_basis = 0
-    """
-    def is_valid_action(self, action):
-        # Check if the action is valid, for example if we hold no stocks, we can't sell any;
-        # return True if the action is valid, False otherwise
-        valid = True
-        
-        # complete 
-        if action[0] > 1 and action[0] < 2:
-            if self.shares_held == 0:
-                valid = False
-            if action[1] 
-    """
-            
+          
             
     
     def render(self, print = True, mode='human', close=False):
