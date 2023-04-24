@@ -66,7 +66,7 @@ class StockTradingEnv(gym.Env):
             self.current_step = np.random.randint(0, len(self.df.loc[:, 'Open'].values) - 6)
         else:
             self.current_step = 0
-        return self._next_observation()
+        return self._next_observation_norm()
 
     def _next_observation(self):
         # get the features from the data frame for current time step
