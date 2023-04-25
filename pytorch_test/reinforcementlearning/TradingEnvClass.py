@@ -140,7 +140,11 @@ class StockTradingEnv(gym.Env):
             additional_cost = shares_bought * execute_price
 
             self.balance -= additional_cost
-            self.cost_basis = (prev_cost + additional_cost) / (self.shares_held + shares_bought)
+            # calculate the new cost basis, check if it is divide by zero, if it is then set it to the execute price
+            if self.shares_held + shares_bought == 0:
+                self.cost_basis = execute_price
+            else:
+                self.cost_basis = (prev_cost + additional_cost) / (self.shares_held + shares_bought)
             
             self.shares_held += shares_bought
 
@@ -165,7 +169,7 @@ class StockTradingEnv(gym.Env):
           
             
     
-    def render(self, print = True, mode='human', close=False):
+    def render(self, print = False, mode='human', close=False):
         # Render the environment to the screen
         profit = self.net_worth - self.init_balance
         if print:
