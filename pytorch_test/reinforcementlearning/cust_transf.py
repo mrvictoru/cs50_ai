@@ -10,22 +10,22 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# define the masked attention class
+
+# define the masked causal attention
 class MaskedAttention(nn.Module):
     def __init__(self, h_dim, max_T, n_heads, drop_p):
         super().__init__()
         self.n_heads = n_heads
         self.drop_p = drop_p
+        # feed forward networks which create the query, key and value
+        self.Q_net = nn.Linear(h_dim, h_dim)
+        self.K_net = nn.Linear(h_dim, h_dim)
+        self.V_net = nn.Linear(h_dim, h_dim)
 
-        # feed forward layers which create the query, key and value vectors
-        self.query = nn.Linear(h_dim, h_dim)
-        self.key = nn.Linear(h_dim, h_dim)
-        self.value = nn.Linear(h_dim, h_dim)
+        # feed forward network which projects the attention to the correct dimension
+        self.proj_net = nn.Linear(h_dim, h_dim)
 
-        # feed forward layer which project the attention to the correct dimension
-        self.proj = nn.Linear(h_dim, h_dim)
-
-        # dropout layer
+        # dropout layers
         self.att_drop = nn.Dropout(drop_p)
         self.proj_drop = nn.Dropout(drop_p)
 
@@ -35,38 +35,38 @@ class MaskedAttention(nn.Module):
         # register_buffer will make the mask a constant tensor
         # so that it will not be included in the model parameters and be updated during backpropagation
         self.register_buffer('mask', mask)
-    
+
     def forward(self, x):
-        # x: [batch_size, T, h_dim]
+        # x: [B, T, H]
         B, T, C = x.shape # batch size, sequence length, hidden dimension * number of heads
         N, D = self.n_heads, C // self.n_heads # number of heads, dimension of each head
 
-        # compute the query, key and value vectors
-        q = self.query(x).view(B, T, N, D).transpose(1, 2) # [batch_size, n_heads, T, D]
-        k = self.key(x).view(B, T, N, D).transpose(1, 2) # [batch_size, n_heads, T, D]
-        v = self.value(x).view(B, T, N, D).transpose(1, 2) # [batch_size, n_heads, T, D]
+        # compute the query, key and value
+        Q = self.Q_net(x).view(B, T, N, D).transpose(1, 2) # [B, N, T, D]
+        K = self.K_net(x).view(B, T, N, D).transpose(1, 2)
+        V = self.V_net(x).view(B, T, N, D).transpose(1, 2)
 
         # compute the attention
-        weights = q @ k.transpose(2,3) / math.sqrt(D) # QK^T / sqrt(D)
+        weights = Q @ K.transpose(2,3) / math.sqrt(D) # QK^T / sqrt(D)
         weights = weights.masked_fill(self.mask[:, :, :T, :T] == 0, float('-inf')) # mask the future tokens
         normalized_weights = F.softmax(weights, dim=-1) # softmax along the last dimension
-        A = self.att_drop(normalized_weights @ v) # attention with dropout
+        A = self.att_drop(normalized_weights @ V) # attention with dropout
 
         # compute the output
-        # gather heads and project to the correct dimension
+        # gather heads and project to correct dimension
         attention = A.transpose(1, 2).contiguous().view(B, T, N*D)
-        out = self.proj_drop(self.proj(attention))
+        out = self.proj_drop(self.proj_net(attention))
 
         return out
-    
-# define the attention block with layer normalization and residual connection as well as the feed forward layer
+
+# define the attention block with layer normalization and residual connection as well as the feed forward network
 class AttentionBlock(nn.Module):
     def __init__(self, h_dim, max_T, n_heads, drop_p):
         super().__init__()
         self.attention = MaskedAttention(h_dim, max_T, n_heads, drop_p)
         self.norm1 = nn.LayerNorm(h_dim)
         self.norm2 = nn.LayerNorm(h_dim)
-        self.forward = nn.Sequential(
+        self.ffn = nn.Sequential(
             nn.Linear(h_dim, 4*h_dim),
             nn.GELU(),
             nn.Linear(4*h_dim, h_dim),
@@ -74,15 +74,16 @@ class AttentionBlock(nn.Module):
         )
 
     def forward(self, x):
-        # x: [batch_size, T, h_dim]
-        # attention -> layer normalization -> residual connection -> feed forward -> layer normalization -> residual connection
+        # x: [B, T, H]
+        # Attention -> LayerNorm -> Residual -> FFN -> LayerNorm -> Residual
         out = self.norm1(x + self.attention(x))
-        out = self.norm2(out + self.forward(out))
+        out = self.norm2(out + self.ffn(out))
+
         return out
-    
-# define the decision transformer model
+
+# define the decision transformer
 class DecisionTransformer(nn.Module):
-    def __init__(self, state_dim, act_dim, n_blocks, h_dim, context_len, n_heads, drop_p, max_timestep = 4096):
+    def __init__(self, state_dim, act_dim, n_block, h_dim, context_len, n_heads, drop_p, max_timestep = 4096):
         super().__init__()
         self.state_dim = state_dim
         self.act_dim = act_dim
@@ -90,27 +91,27 @@ class DecisionTransformer(nn.Module):
 
         # transformer blocks
         input_seq_len = 3 * context_len
-        blocks = [AttentionBlock(h_dim, input_seq_len, n_heads, drop_p) for _ in range(n_blocks)]
+        blocks = [AttentionBlock(h_dim, input_seq_len, n_heads, drop_p) for _ in range(n_block)]
         self.transformer = nn.Sequential(*blocks)
 
-        # projection heads (project to embedding dimension)
+        # projection heads (project to embedding)
         self.embed_ln = nn.LayerNorm(h_dim)
         self.embed_timestep = nn.Embedding(max_timestep, h_dim)
         self.embed_rtg = nn.Linear(1, h_dim)
         self.embed_state = nn.Linear(state_dim, h_dim)
 
-        # continuous action head
-        self.embed_action = nn.Linear(act_dim, h_dim)
-        use_action_tanh = True
+        # discrete actions
+        #self.embed_act = torch.nn.Embedding(act_dim+1, h_dim)
+        #use_action_tah = False # for discrete action
 
-        # # discrete action head
-        # self.embed_action = nn.Embedding(act_dim, h_dim)
-        # use_action_tanh = False
+        # continuous actions
+        self.embed_act = nn.Linear(act_dim, h_dim)
+        use_action_tah = True # for continuous action
 
         # prediction heads
         self.pred_rtg = nn.Linear(h_dim, 1)
         self.pred_state = nn.Linear(h_dim, state_dim)
-        self.pred_act = nn.Sequential(*([nn.Linear(h_dim, act_dim)] + ([nn.Tanh()] if use_action_tanh else [])))
+        self.pred_act = nn.Sequential(*([nn.Linear(h_dim, act_dim)] + ([nn.Tanh()] if use_action_tah else [])))
     
     def forward(self, state, rtg, timestep, actions):
         B, T, _ = state.shape
@@ -137,11 +138,11 @@ class DecisionTransformer(nn.Module):
         # h[:, 0, t] is conditioned on r_0, s_0, a_0, ..., r_t
         # h[:, 1, t] is conditioned on r_0, s_0, a_0, ..., r_t, s_t
         # h[:, 2, t] is conditioned on r_0, s_0, a_0, ..., r_t, s_t, a_t
-        h = h.reshape(B, 3, T, self.h_dim).permute(0,2,1,3)
+        h = h.reshape(B, T, 3, self.h_dim).permute(0,2,1,3)
 
         # get predictions
         return_preds = self.pred_rtg(h[:,2])    # predict next rtg given r, s, a
         state_preds = self.pred_state(h[:,2])   # predict next state given r, s, a
-        act_preds = self.pred_act(h[:,2])       # predict action given r, s
+        act_preds = self.pred_act(h[:,1])       # predict action given r, s
 
         return return_preds, state_preds, act_preds
