@@ -48,7 +48,7 @@ class MaskedAttention(nn.Module):
 
         # compute the attention
         weights = Q @ K.transpose(2,3) / math.sqrt(D) # QK^T / sqrt(D)
-        weights = weights.masked_fill(self.mask[:, :, :T, :T] == 0, float('-inf')) # mask the future tokens
+        weights = weights.masked_fill(self.mask[:, :, :T, :T] == 0, float('-inf')) # mask the future tokens 
         normalized_weights = F.softmax(weights, dim=-1) # softmax along the last dimension
         A = self.att_drop(normalized_weights @ V) # attention with dropout
 
@@ -122,7 +122,7 @@ class DecisionTransformer(nn.Module):
         # embedding for the state, reward and actions along with time embedding
         state_emb = self.embed_state(state) + time_emb
         rtg_emb = self.embed_rtg(rtg) + time_emb
-        act_emb = self.embed_act(actions)
+        act_emb = self.embed_act(actions) + time_emb
         if act_emb.shape != time_emb.shape:
             act_emb = torch.squeeze(act_emb) # fix the unmatch dimension
         act_emb = act_emb + time_emb
