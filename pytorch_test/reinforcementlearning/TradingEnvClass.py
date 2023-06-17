@@ -23,6 +23,39 @@ import sys
 from getstock import *
 
 # define the trading environment class
+# This class defines a gym environment for simulating stock trading. The environment takes a pandas DataFrame of stock prices as input, 
+# along with an initial account balance, a maximum number of steps, and a flag indicating whether to start at a random point in the data frame. 
+# The environment provides an action space for buying, selling, or holding shares, and an observation space consisting of the current stock prices and additional features such as the current account balance and net worth. 
+# The environment also provides a reward function based on the account balance and a delay modifier, which biases the reward towards having a higher balance towards the end of the episode. 
+# The environment can be reset to an initial state, and can step forward in time by executing an action. 
+# The environment provides a render function for displaying the current state of the environment, and a metadata attribute for specifying the available render modes.
+
+# Example usage:
+# import gym
+# import pandas as pd
+# from TradingEnvClass import StockTradingEnv
+
+# load stock price data
+# df = pd.read_csv('stock_prices.csv')
+
+# create trading environment
+# env = StockTradingEnv(df, init_balance=10000, max_step=1000, random=True)
+
+# reset environment to initial state
+# obs = env.reset()
+
+# loop over steps
+# for i in range(1000):
+#     # choose random action
+#     action = env.action_space.sample()
+#     # step forward in time
+#     obs, reward, done, info = env.step(action)
+#     # render environment
+#     env.render()
+#     # check if episode is done
+#     if done:
+#         break
+
 class StockTradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
@@ -169,10 +202,10 @@ class StockTradingEnv(gym.Env):
           
             
     
-    def render(self, print = False, mode='human', close=False):
+    def render(self, printcheck = False, mode='human', close=False):
         # Render the environment to the screen
         profit = self.net_worth - self.init_balance
-        if print:
+        if printcheck:
             print(f'Step: {self.current_step}')
             print(f'Balance: {self.balance}')
             print(f'Shares held: {self.shares_held} (Total sold: {self.total_shares_sold})')
