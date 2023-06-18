@@ -11,9 +11,10 @@ MAX_NUM_SHARES = 2147483647
 MAX_SHARE_PRICE = 5000
 
 # import the necessary packages
-import gym
+import gymnasium as gym
 from gym.envs.registration import register
 from gym import spaces, error, utils
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -77,12 +78,13 @@ class StockTradingEnv(gym.Env):
         # trade action history
         self.action_history = []
 
-        # action space (buy x%, sell x%, hold)
+        # action space (buy x%, sell x%, holdclass StockTradingEnv(gym.Env):
+
         self.action_space = spaces.Box(low=np.array([-1, 0.01]), high=np.array([1, 0.99]), dtype=np.float16)
 
         # observation space (prices and technical indicators)
         # shape should be (n_features + 6) where 6 is the number of additional dynamic features of the environment
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(len(self.df.columns)+6,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(len(df.columns)+6,), dtype=np.float16)
 
     # reset the state of the environment to an initial state
     def reset(self):
@@ -217,3 +219,4 @@ class StockTradingEnv(gym.Env):
 
         # return the observation
         return self._next_observation()
+
