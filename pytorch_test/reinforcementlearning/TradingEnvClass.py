@@ -153,7 +153,7 @@ class StockTradingEnv(gym.Env):
 
         obs = self._next_observation_norm()
 
-        return obs, reward, terminate, truncate {}
+        return obs, reward, terminate, truncate, {}
     
     def _take_action(self,action, execute_price):
         # Set the current price to a random price within the time step
