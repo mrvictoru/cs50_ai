@@ -11,7 +11,7 @@ MAX_NUM_SHARES = 2147483647
 MAX_SHARE_PRICE = 5000
 
 # import the necessary packages
-import gymnasium as gym
+import gym
 from gym.envs.registration import register
 from gym import spaces, error, utils
 
@@ -148,12 +148,11 @@ class StockTradingEnv(gym.Env):
         delay_modifier = (self.current_step / self.max_step)
         reward = self.balance * delay_modifier
         # if net_worth is below 0, or current_step is greater than max_step, then environment terminates
-        terminate = self.net_worth <= 0 or self.current_step >= self.max_step
-        truncate = False
+        done = self.net_worth <= 0 or self.current_step >= self.max_step
 
         obs = self._next_observation_norm()
 
-        return obs, reward, terminate, truncate, {}
+        return obs, reward, done, {}
     
     def _take_action(self,action, execute_price):
         # Set the current price to a random price within the time step
