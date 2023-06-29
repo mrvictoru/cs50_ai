@@ -10,6 +10,13 @@ MAX_ACCOUNT_BALANCE = 2147483647
 MAX_NUM_SHARES = 2147483647
 MAX_SHARE_PRICE = 5000
 
+UP_COLOR = '#27A59A'
+DOWN_COLOR = '#EF534F'
+UP_TEXT_COLOR = '#73D3CC'
+DOWN_TEXT_COLOR = '#DC2C27'
+VOLUME_CHART_HEIGHT = 0.33
+
+
 # import the necessary packages
 import gym
 from gym.envs.registration import register
@@ -17,11 +24,17 @@ from gym import spaces, error, utils
 
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import sys
 
 # helper function to get stock data
 from getstock import *
+
+def data2num(date):
+    converter = mdates.strpdate2num('%Y-%m-%d')
+    return converter(date)
 
 # define the trading environment class
 # This class defines a gym environment for simulating stock trading. The environment takes a pandas DataFrame of stock prices as input, 
@@ -69,6 +82,7 @@ class StockTradingEnv(gym.Env):
         self.init_balance = init_balance
         self.max_step = max_step
         self.random = random
+        self.trades = []
 
         # normalize the data
         self.price_mean = self.df['Close'].mean()
@@ -144,9 +158,10 @@ class StockTradingEnv(gym.Env):
         self._take_action(action,execute_price)
         self.current_step += 1
         self.action_history.append(action)
-        # calculate reward based on the balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
+        # calculate reward based on the net worth/balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
         delay_modifier = (self.current_step / self.max_step)
         reward = self.balance * delay_modifier
+        # reward = self.net_worth * delay_modifier 
         # if net_worth is below 0, or current_step is greater than max_step, then environment terminates
         done = self.net_worth <= 0 or self.current_step >= self.max_step
 
@@ -182,6 +197,7 @@ class StockTradingEnv(gym.Env):
                 self.cost_basis = (prev_cost + additional_cost) / (self.shares_held + shares_bought)
             
             self.shares_held += shares_bought
+            self.trades.append({'step': self.current_step, 'shares': shares_bought, 'total': additional_cost, 'type': "buy"})
 
         elif -1 <= action_type <= -2/3:
             # sell amount % of shares held (rounded to interger)
@@ -193,6 +209,7 @@ class StockTradingEnv(gym.Env):
             self.shares_held -= shares_sold
             self.total_shares_sold += shares_sold
             self.total_sales_value += shares_sold * execute_price
+            self.trades.append({'step': self.current_step, 'shares': shares_sold, 'total': shares_sold * execute_price, 'type': "sell"})
 
         self.net_worth = self.balance + self.shares_held * execute_price
 
@@ -202,12 +219,24 @@ class StockTradingEnv(gym.Env):
         if self.shares_held == 0:
             self.cost_basis = 0
           
-            
-    
-    def render(self, printcheck = False, mode='human', close=False):
+    # see https://towardsdatascience.com/visualizing-stock-trading-agents-using-matplotlib-and-gym-584c992bc6d4        
+    def _render_to_file(self, filename='render.txt'):
+        profit = self.net_worth - self.init_balance
+
+        file = open(filename, 'a+')
+        file.write(f'Step: {self.current_step}\n')
+        file.write(f'Balance: {self.balance}\n')
+        file.write(f'Shares held: {self.shares_held} (Total sold: {self.total_shares_sold})\n')
+        file.write(f'Avg cost for held shares: {self.cost_basis} (Total sales value: {self.total_sales_value})\n')
+        file.write(f'Net worth: {self.net_worth} (Max net worth: {self.max_net_worth})\n')
+        file.write(f'Profit: {profit}\n')
+        file.write(f'Action: {self.action_history[-1]}\n')
+        file.close()
+
+    def render(self, mode='None', title = None, **kwargs):
         # Render the environment to the screen
         profit = self.net_worth - self.init_balance
-        if printcheck:
+        if mode == 'print':
             print(f'Step: {self.current_step}')
             print(f'Balance: {self.balance}')
             print(f'Shares held: {self.shares_held} (Total sold: {self.total_shares_sold})')
@@ -216,7 +245,151 @@ class StockTradingEnv(gym.Env):
             print(f'Profit: {profit}')
             # print out the current stock price
             print(self.df.iloc[self.current_step])
+        elif mode == 'file':
+            self._render_to_file(kwargs.get('filename', 'render.txt'))
+        elif mode == 'live':
+            if self.visualization == None:
+                self.visualization = StockTradingGraph(self.df, title)
+            if self.current_step > LOOKBACK_WINDOW_SIZE:
+                self.visualization.render(self.current_step, self.net_worth, self.trades, window_size=LOOKBACK_WINDOW_SIZE)
 
         # return the observation
         return self._next_observation()
 
+from mpl_finance import candlestick_ohlc as candlestick
+
+class StockTradingGraph:
+    """ A stock trading visualization using matplotlib made to render OpenAI gym environments """
+    def __init__(self,df,title=None):
+        self.df=df
+        self.net_worths = np.zeros(len(self.df['Date']))
+
+        # create a figure on screen and set the title
+        fig = plt.figure()
+        fig.suptitle(str(title) if title is not None else "Stock Trading Graph")
+
+        # create top subplot for net worth axis
+        self.net_worth_ax = plt.subplot2grid((6,1),(0,0),rowspan=2,colspan=1)
+
+        # create bottom subplot for shared price/volume axis
+        self.price_ax = plt.subplot2grid((6,1),(2,0),rowspan=8,colspan=1,sharex=self.net_worth_ax)
+
+        # create a new axis for volume which shares its x-axis with price
+        self.volume_ax = self.price_ax.twinx()
+
+        # add padding to make graph easier to view
+        plt.subplots_adjust(left=0.11,bottom=0.24,right=0.90,top=0.90,wspace=0.2,hspace=0)
+
+        # Show the graph without blocking the rest of the program
+        plt.show(block=False)
+    
+    def _render_net_worth(self, current_step, dates, net_worth, window_start):
+        # Clear the frame rendered last step
+        self.net_worth_ax.clear()
+
+        # Plot net worths
+        self.net_worth_ax.plot_date(dates, self.net_worths[window_start:current_step+1],'-', label='Net Worth')
+
+        # Show legend, which uses the label we define for the plot above
+        self.net_worth_ax.legend()
+        legend = self.net_worth_ax.legend(loc=2, ncol=2, prop={'size':8})
+        legend.get_frame().set_alpha(0.4)
+
+        last_date = data2num(self.df['Date'].values[current_step])
+        last_net_worth = self.net_worths[current_step]
+
+        # Annotate the current net worth on the net worth graph
+        self.net_worth_ax.annotate('{0:.2f}'.format(net_worth), (last_date, last_net_worth),
+                                    xytext=(last_date, last_net_worth),
+                                    bbox=dict(boxstyle='round', fc='w', ec='k', lw=1),
+                                    color="black",
+                                    fontsize="small")
+        
+        # Add space above and below min/max net worth
+        self.net_worth_ax.set_ylim(min(self.net_worths[np.nonzero(self.net_worths)]) / 1.25, max(self.net_worths) * 1.25)
+
+    def _render_price(self, current_step, dates, net_worth, step_range):
+        self.price_ax.clear()
+
+        # Format data for OHLC candlestick graph
+        candlesticks = zip(dates, self.df['Open'].values[step_range], self.df['Close'].values[step_range],
+                            self.df['High'].values[step_range], self.df['Low'].values[step_range])
+
+        # Plot price using candlestick graph from mpl_finance
+        candlestick(self.price_ax, candlesticks, width=1, colorup=UP_COLOR, colordown=DOWN_COLOR)
+
+        last_date = date2num(self.df['Date'].values[current_step])
+        last_close = self.df['Close'].values[current_step]
+        last_high = self.df['High'].values[current_step]
+
+        # Annotate the current price on the price graph
+        self.price_ax.annotate('{0:.2f}'.format(last_close), (last_date, last_close),
+                                xytext=(last_date, last_high),
+                                bbox=dict(boxstyle='round', fc='w', ec='k', lw=1),
+                                color="black",
+                                fontsize="small")
+
+        # Shift price axis up to give volume chart space
+        ylim = self.price_ax.get_ylim()
+        self.price_ax.set_ylim(ylim[0] - (ylim[1] - ylim[0]) * VOLUME_CHART_HEIGHT, ylim[1])
+
+    def _render_volume(self, current_step, dates, net_worth, step_range):
+        self.volume_ax.clear()
+        volume = np.array(self.df['Volume'].values[step_range])
+
+        pos = self.df['Open'].values[step_range] - self.df['Close'].values[step_range] < 0
+        neg = self.df['Open'].values[step_range] - self.df['Close'].values[step_range] > 0
+
+        # Color volume bars based on price direction on that date
+        self.volume_ax.bar(dates[pos], volume[pos], color=UP_COLOR, alpha=0.4, width=1, align='center')
+        self.volume_ax.bar(dates[neg], volume[neg], color=DOWN_COLOR, alpha=0.4, width=1, align='center')
+
+        # Cap volume axis height below price chart and hide ticks
+        self.volume_ax.set_ylim(0, max(volume) / VOLUME_CHART_HEIGHT)
+        self.volume_ax.yaxis.set_ticks([])
+
+    def _render_trades(self, current_step, trades , step_range):
+        for trade in trades:
+            if trade['step'] in step_range:
+                date = date2num(self.df['Date'].values[trade['step']])
+                high = self.df['High'].values[trade['step']]
+                low = self.df['Low'].values[trade['step']]
+                
+            if trade['type'] == 'buy':
+                high_low = low
+                color = UP_TEXT_COLOR
+            else:
+                high_low = high
+                color = DOWN_TEXT_COLOR
+            
+            total = '{0:.2f}'.format(trade['total'])      # Print the current price to the price axis   
+            self.price_ax.annotate(f'${total}', (date, high_low),
+                                   xytext=(date, high_low), color=color,
+                                   fontsize=8,
+                                   arrowprops=(dict(color=color)))
+    
+    def render(self, current_step, net_worth, trades, windows_size=40):
+        self.net_worths[current_step] = net_worth
+
+        window_start = max(current_step - windows_size, 0)
+        step_range = range(window_start, current_step + 1)
+
+        # Format dates as timestamps, necessary for candlestick graph
+        dates = np.array([date2num(x) for x in self.df['Date'].values[step_range]])
+
+        # render graph of interest
+        self._render_net_worth(current_step, dates, net_worth, window_start)
+        self._render_price(current_step, dates, net_worth, step_range)
+        self._render_volume(current_step, dates, net_worth, step_range)
+        self._render_trades(current_step, trades , step_range)
+
+        # Format the date ticks to be more easily read
+        self.price_ax.set_xticklabels(self.df['Date'].values[step_range],rotation=45, horizontalalignment='right')
+
+        # Hide duplicate net worth date labels
+        plt.setp(self.net_worth_ax.get_xticklabels(), visible=False)
+
+        # Necessary to view frames before they are unrendered
+        plt.pause(0.001)
+
+    
