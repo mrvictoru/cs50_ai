@@ -17,7 +17,7 @@ DOWN_TEXT_COLOR = '#DC2C27'
 VOLUME_CHART_HEIGHT = 0.33
 
 
-LOOKBACK_WINDOW_SIZE = 40
+LOOKBACK_WINDOW_SIZE = 60
 
 
 # import the necessary packages
@@ -35,8 +35,8 @@ import sys
 # helper function to get stock data
 from getstock import *
 
-def data2num(date):
-    converter = mdates.strpdate2num('%Y-%m-%d')
+def date2num(date):
+    converter = mdates.datestr2num('%Y-%m-%d')
     return converter(date)
 
 # define the trading environment class
@@ -74,7 +74,9 @@ def data2num(date):
 #         break
 
 class StockTradingEnv(gym.Env):
-    metadata = {'render.modes': ['human']}
+    """A stock trading environment for OpenAI gym"""
+    metadata = {'render.modes': ['live', 'file', 'None']}
+    visualization = None
 
     def __init__(self, df, init_balance, max_step, random = True):
         super(StockTradingEnv, self).__init__()
@@ -254,7 +256,7 @@ class StockTradingEnv(gym.Env):
             if self.visualization == None:
                 self.visualization = StockTradingGraph(self.df, title)
             if self.current_step > LOOKBACK_WINDOW_SIZE:
-                self.visualization.render(self.current_step, self.net_worth, self.trades, window_size=LOOKBACK_WINDOW_SIZE)
+                self.visualization.render(self.current_step, self.net_worth, self.trades, windows_size=LOOKBACK_WINDOW_SIZE)
 
         # return the observation
         return self._next_observation()
@@ -265,7 +267,7 @@ class StockTradingGraph:
     """ A stock trading visualization using matplotlib made to render OpenAI gym environments """
     def __init__(self,df,title=None):
         self.df=df
-        self.net_worths = np.zeros(len(self.df['Date']))
+        self.net_worths = np.zeros(len(self.df.index))
 
         # create a figure on screen and set the title
         fig = plt.figure()
@@ -298,7 +300,7 @@ class StockTradingGraph:
         legend = self.net_worth_ax.legend(loc=2, ncol=2, prop={'size':8})
         legend.get_frame().set_alpha(0.4)
 
-        last_date = data2num(self.df['Date'].values[current_step])
+        last_date = date2num(self.df.index[current_step])
         last_net_worth = self.net_worths[current_step]
 
         # Annotate the current net worth on the net worth graph
@@ -327,7 +329,7 @@ class StockTradingGraph:
         mpf.plot(candlesticks, type='candle', ax=self.price_ax, volume=False, style='yahoo', up_color=UP_COLOR, down_color=DOWN_COLOR)
 
 
-        last_date = date2num(self.df['Date'].values[current_step])
+        last_date = date2num(self.df.index[current_step])
         last_close = self.df['Close'].values[current_step]
         last_high = self.df['High'].values[current_step]
 
@@ -360,7 +362,7 @@ class StockTradingGraph:
     def _render_trades(self, current_step, trades , step_range):
         for trade in trades:
             if trade['step'] in step_range:
-                date = date2num(self.df['Date'].values[trade['step']])
+                date = date2num(self.df.index[trade['step']])
                 high = self.df['High'].values[trade['step']]
                 low = self.df['Low'].values[trade['step']]
                 
@@ -384,7 +386,7 @@ class StockTradingGraph:
         step_range = range(window_start, current_step + 1)
 
         # Format dates as timestamps, necessary for candlestick graph
-        dates = np.array([date2num(x) for x in self.df['Date'].values[step_range]])
+        dates = np.array([date2num(x) for x in self.df.index[step_range]])
 
         # render graph of interest
         self._render_net_worth(current_step, dates, net_worth, window_start)
