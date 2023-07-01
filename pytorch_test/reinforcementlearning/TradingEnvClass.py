@@ -17,6 +17,9 @@ DOWN_TEXT_COLOR = '#DC2C27'
 VOLUME_CHART_HEIGHT = 0.33
 
 
+LOOKBACK_WINDOW_SIZE = 40
+
+
 # import the necessary packages
 import gym
 from gym.envs.registration import register
@@ -256,7 +259,7 @@ class StockTradingEnv(gym.Env):
         # return the observation
         return self._next_observation()
 
-from mpl_finance import candlestick_ohlc as candlestick
+import mplfinance as mpf
 
 class StockTradingGraph:
     """ A stock trading visualization using matplotlib made to render OpenAI gym environments """
@@ -312,11 +315,17 @@ class StockTradingGraph:
         self.price_ax.clear()
 
         # Format data for OHLC candlestick graph
-        candlesticks = zip(dates, self.df['Open'].values[step_range], self.df['Close'].values[step_range],
-                            self.df['High'].values[step_range], self.df['Low'].values[step_range])
+        candlesticks = pd.DataFrame({'Date': dates[step_range],
+                                     'Open': self.df['Open'].values[step_range],
+                                     'Close': self.df['Close'].values[step_range],
+                                     'High': self.df['High'].values[step_range],
+                                     'Low': self.df['Low'].values[step_range]})
+        
+        candlesticks.set_index('Date', inplace=True)
 
         # Plot price using candlestick graph from mpl_finance
-        candlestick(self.price_ax, candlesticks, width=1, colorup=UP_COLOR, colordown=DOWN_COLOR)
+        mpf.plot(candlesticks, type='candle', ax=self.price_ax, volume=False, style='yahoo', up_color=UP_COLOR, down_color=DOWN_COLOR)
+
 
         last_date = date2num(self.df['Date'].values[current_step])
         last_close = self.df['Close'].values[current_step]
