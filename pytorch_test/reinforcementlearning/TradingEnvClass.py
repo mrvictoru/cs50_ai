@@ -28,6 +28,7 @@ from gym import spaces, error, utils
 import numpy as np
 import pandas as pd
 import matplotlib
+import datetime as dt
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import sys
@@ -35,9 +36,12 @@ import sys
 # helper function to get stock data
 from getstock import *
 
-def date2num(date):
-    converter = mdates.datestr2num('%Y-%m-%d')
-    return converter(date)
+
+def date2num(timestamp):
+    timestamp = timestamp.timestamp()
+    # convert timestamp to datetime object
+    date = dt.datetime.fromtimestamp(timestamp)
+    return mdates.datestr2num(date.strftime('%Y-%m-%d'))
 
 # define the trading environment class
 # This class defines a gym environment for simulating stock trading. The environment takes a pandas DataFrame of stock prices as input, 
@@ -317,16 +321,16 @@ class StockTradingGraph:
         self.price_ax.clear()
 
         # Format data for OHLC candlestick graph
-        candlesticks = pd.DataFrame({'Date': dates[step_range],
-                                     'Open': self.df['Open'].values[step_range],
+        candlesticks = pd.DataFrame({'Open': self.df['Open'].values[step_range],
                                      'Close': self.df['Close'].values[step_range],
                                      'High': self.df['High'].values[step_range],
-                                     'Low': self.df['Low'].values[step_range]})
+                                     'Low': self.df['Low'].values[step_range]},
+                                     index=self.df.index[step_range])
         
         candlesticks.set_index('Date', inplace=True)
 
         # Plot price using candlestick graph from mpl_finance
-        mpf.plot(candlesticks, type='candle', ax=self.price_ax, volume=False, style='yahoo', up_color=UP_COLOR, down_color=DOWN_COLOR)
+        mpf.plot(candlesticks, type='candle', ax=self.price_ax, volume=False, style='yahoo')
 
 
         last_date = date2num(self.df.index[current_step])
