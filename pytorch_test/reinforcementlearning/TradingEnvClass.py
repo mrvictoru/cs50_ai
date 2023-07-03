@@ -317,36 +317,59 @@ class StockTradingGraph:
         # Add space above and below min/max net worth
         self.net_worth_ax.set_ylim(min(self.net_worths[np.nonzero(self.net_worths)]) / 1.25, max(self.net_worths) * 1.25)
 
-    def _render_price(self, current_step, dates, net_worth, step_range):
+    def _render_price(self, current_step, net_worth, dates, step_range):
         self.price_ax.clear()
 
-        # Format data for OHLC candlestick graph
-        candlesticks = pd.DataFrame({'Open': self.df['Open'].values[step_range],
-                                     'Close': self.df['Close'].values[step_range],
-                                     'High': self.df['High'].values[step_range],
-                                     'Low': self.df['Low'].values[step_range]},
-                                     index=self.df.index[step_range])
-        
-        candlesticks.set_index('Date', inplace=True)
+        # Create a dataframe of price data for plotting candlestick graph
+        candlesticks = self.df.iloc[step_range, [0,1,2,3]]
+        candlesticks['Date'] = candlesticks.index.map(date2num)
+        candlesticks = candlesticks.reindex(columns=['Date', 'Open', 'Close', 'High', 'Low'])
 
-        # Plot price using candlestick graph from mpl_finance
-        mpf.plot(candlesticks, type='candle', ax=self.price_ax, volume=False, style='yahoo')
-
+        # Plot price using candlestick graph from mplfinance
+        mpf.plot(candlesticks, type='candle', volume=False, style='charles', ax=self.price_ax)
 
         last_date = date2num(self.df.index[current_step])
         last_close = self.df['Close'].values[current_step]
         last_high = self.df['High'].values[current_step]
 
-        # Annotate the current price on the price graph
+        # Print the current price to the price axis
         self.price_ax.annotate('{0:.2f}'.format(last_close), (last_date, last_close),
-                                xytext=(last_date, last_high),
-                                bbox=dict(boxstyle='round', fc='w', ec='k', lw=1),
-                                color="black",
-                                fontsize="small")
+                            xytext=(last_date, last_high),
+                            bbox=dict(boxstyle='round',
+                                        fc='w', ec='k', lw=1),
+                            color="black",
+                            fontsize="small")
+                        
+
+        """
+        this is the old render function using the old mplfinance library
+        # Format data for OHCL candlestick graph
+        candlesticks = zip(dates,
+                           self.df['Open'].values[step_range], self.df['Close'].values[step_range],
+                           self.df['High'].values[step_range], self.df['Low'].values[step_range])
+
+        # Plot price using candlestick graph from mpl_finance
+        candlestick(self.price_ax, candlesticks, width=1,
+                    colorup=UP_COLOR, colordown=DOWN_COLOR)
+
+        last_date = date2num(self.df['Date'].values[current_step])
+        last_close = self.df['Close'].values[current_step]
+        last_high = self.df['High'].values[current_step]
+
+        # Print the current price to the price axis
+        self.price_ax.annotate('{0:.2f}'.format(last_close), (last_date, last_close),
+                               xytext=(last_date, last_high),
+                               bbox=dict(boxstyle='round',
+                                         fc='w', ec='k', lw=1),
+                               color="black",
+                               fontsize="small")
 
         # Shift price axis up to give volume chart space
         ylim = self.price_ax.get_ylim()
-        self.price_ax.set_ylim(ylim[0] - (ylim[1] - ylim[0]) * VOLUME_CHART_HEIGHT, ylim[1])
+        self.price_ax.set_ylim(ylim[0] - (ylim[1] - ylim[0])
+                               * VOLUME_CHART_HEIGHT, ylim[1])
+        """
+        
 
     def _render_volume(self, current_step, dates, net_worth, step_range):
         self.volume_ax.clear()
@@ -399,7 +422,7 @@ class StockTradingGraph:
         self._render_trades(current_step, trades , step_range)
 
         # Format the date ticks to be more easily read
-        self.price_ax.set_xticklabels(self.df['Date'].values[step_range],rotation=45, horizontalalignment='right')
+        self.price_ax.set_xticklabels(self.df.index[current_step],rotation=45, horizontalalignment='right')
 
         # Hide duplicate net worth date labels
         plt.setp(self.net_worth_ax.get_xticklabels(), visible=False)
