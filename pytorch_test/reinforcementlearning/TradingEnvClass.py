@@ -308,8 +308,8 @@ class StockTradingGraph:
         last_net_worth = self.net_worths[current_step]
 
         # Annotate the current net worth on the net worth graph
-        self.net_worth_ax.annotate('{0:.2f}'.format(net_worth), (last_date, last_net_worth),
-                                    xytext=(last_date, last_net_worth),
+        self.net_worth_ax.annotate('{0:.2f}'.format(net_worth), (last_date, float(last_net_worth)),
+                                    xytext=(last_date, float(last_net_worth)),
                                     bbox=dict(boxstyle='round', fc='w', ec='k', lw=1),
                                     color="black",
                                     fontsize="small")
@@ -392,19 +392,19 @@ class StockTradingGraph:
                 date = date2num(self.df.index[trade['step']])
                 high = self.df['High'].values[trade['step']]
                 low = self.df['Low'].values[trade['step']]
-                
-            if trade['type'] == 'buy':
-                high_low = low
-                color = UP_TEXT_COLOR
-            else:
-                high_low = high
-                color = DOWN_TEXT_COLOR
+
+                if trade['type'] == 'buy':
+                    high_low = low
+                    color = UP_TEXT_COLOR
+                else:
+                    high_low = high
+                    color = DOWN_TEXT_COLOR
             
-            total = '{0:.2f}'.format(trade['total'])      # Print the current price to the price axis   
-            self.price_ax.annotate(f'${total}', (date, high_low),
-                                   xytext=(date, high_low), color=color,
-                                   fontsize=8,
-                                   arrowprops=(dict(color=color)))
+                total = '{0:.2f}'.format(trade['total'])      # Print the current price to the price axis   
+                self.price_ax.annotate(f'${total}', (date, high_low),
+                                    xytext=(date, high_low), color=color,
+                                    fontsize=8,
+                                    arrowprops=(dict(color=color)))
     
     def render(self, current_step, net_worth, trades, windows_size=40):
         self.net_worths[current_step] = net_worth
@@ -422,7 +422,7 @@ class StockTradingGraph:
         self._render_trades(current_step, trades , step_range)
 
         # Format the date ticks to be more easily read
-        self.price_ax.set_xticklabels(self.df.index[current_step],rotation=45, horizontalalignment='right')
+        self.price_ax.set_xticklabels(self.df.index[step_range],rotation=45, horizontalalignment='right')
 
         # Hide duplicate net worth date labels
         plt.setp(self.net_worth_ax.get_xticklabels(), visible=False)
