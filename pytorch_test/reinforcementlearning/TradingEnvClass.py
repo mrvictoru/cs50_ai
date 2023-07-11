@@ -81,7 +81,7 @@ class StockTradingEnv(gym.Env):
         # data
         # get all the features from df except for the column 'Volume'
         self.df = df.drop(columns=['Volume'])
-        self.dfvolume = df['Volume'].values
+        self.dfvolume = df['Volume']
         self.reward_range = (0, MAX_ACCOUNT_BALANCE)
         self.init_balance = init_balance
         self.max_step = max_step
@@ -241,7 +241,7 @@ class StockTradingEnv(gym.Env):
         file.write(f'Action: {self.action_history[-1]}\n')
         file.close()
 
-    def render(self, mode='None', title = None, **kwargs):
+    def render(self, mode='None', **kwargs):
         # Render the environment to the screen
         profit = self.net_worth - self.init_balance
         if mode == 'print':
@@ -255,14 +255,15 @@ class StockTradingEnv(gym.Env):
             print(self.df.iloc[self.current_step])
         elif mode == 'file':
             self._render_to_file(kwargs.get('filename', 'render.txt'))
-        elif mode == 'live':
+        elif mode == 'plot':
             if self.visualization == None:
                 self.visualization = StockTradingGraph(self.df, self.dfvolume, self.action_history, self.net_worths, windows_size=LOOKBACK_WINDOW_SIZE)
             if self.current_step > LOOKBACK_WINDOW_SIZE:
-                self.visualization.render(self.current_step, self.net_worths, self.trades, windows_size=LOOKBACK_WINDOW_SIZE)
+                return self.visualization.plot(self.current_step)
 
-        # return the observation
-        return self._next_observation()
+        else:
+            # return the observation
+            return self._next_observation()
 
 
     

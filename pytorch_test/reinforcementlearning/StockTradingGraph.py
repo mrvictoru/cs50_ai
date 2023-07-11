@@ -14,37 +14,39 @@ When animating, call the animate function with current_step, list of net_worth, 
 
 import mplfinance as mpf
 
+
+
 class StockTradingGraph:
     def __init__(self, df, dfvolume, action_history, net_worth_history, windows_size=45):
         # Save the dataframe with the stock price data (get only open, high, low, close from df)
         self.df = df[['Open', 'High', 'Low', 'Close']]
         # get dfvolume as a column of df
-        self.df['Volume'] = dfvolume['Volume']
-        # get the list net worth history into df with column name 'net_worth'
-        self.df['net_worth'] = net_worth_history
+        self.df['Volume'] = dfvolume
 
-        # create a new column for sell marker position (slightly above the high price when the action history indicates sell)
-        self.df['sell'] = self.df['High'].where(-1 <= action_history[0] <= -2/3)*1.05
-        # create a new column for buy marker position (slightly below the low price when the action history indicates buy)
-        self.df['buy'] = self.df['Low'].where(1 >= action_history[0] >= 2/3)*0.95
+        self.net_worth = net_worth_history
+
+        self.action_history = action_history
 
         self.windows_size = windows_size
 
 
-    def animate(self, current_step):
+    def plot(self, current_step):
         # Get the data for the current window without the networth column
         start = max(current_step - self.windows_size, 0)
         end = current_step + 1
-        data = self.df.iloc[start:end].drop(columns=['net_worth'])
-        # get the data for the current window with only the networth column
-        net_worth = self.df.iloc[start:end]['net_worth']
+        data = self.df.iloc[start:end]
+
+        # create a new column for sell marker position (slightly above the high price when the action history indicates sell)
+        sell = data['High'].where(-1 <= self.action_history[0] <= -2/3)*1.05
+        # create a new column for buy marker position (slightly below the low price when the action history indicates buy)
+        buy = data['Low'].where(1 >= self.action_history[0] >= 2/3)*0.95
 
         # add networth line chart to subplot
-        net_worth_ap = mpf.make_addplot(net_worth, type='line', ylabel='Net Worth ($)', panel = 2)
+        net_worth_ap = mpf.make_addplot(self.net_worth, type='line', ylabel='Net Worth ($)', panel = 2)
         # add buy marker to subplot
-        buy_ap = mpf.make_addplot(data['buy'], type='scatter', marker='^', markersize=100, color='green', panel = 0)
+        buy_ap = mpf.make_addplot(buy, type='scatter', marker='^', markersize=100, color='green', panel = 0)
         # add sell marker to subplot
-        sell_ap = mpf.make_addplot(data['sell'], type='scatter', marker='v', markersize=100, color='red', panel = 0)
+        sell_ap = mpf.make_addplot(sell, type='scatter', marker='v', markersize=100, color='red', panel = 0)
 
         # create the fig
         fig, axlist = mpf.plot(data, type='candle', addplot=[net_worth_ap, buy_ap, sell_ap], volume=True, 
@@ -52,6 +54,4 @@ class StockTradingGraph:
         
         # return the fig
         return fig
-
-        
 
