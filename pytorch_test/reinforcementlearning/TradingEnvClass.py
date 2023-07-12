@@ -264,6 +264,7 @@ class StockTradingEnv(gym.Env):
         else:
             # return the observation
             return self._next_observation()
+        return None
 
 
     
