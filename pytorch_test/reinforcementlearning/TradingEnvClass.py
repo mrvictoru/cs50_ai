@@ -17,7 +17,7 @@ DOWN_TEXT_COLOR = '#DC2C27'
 VOLUME_CHART_HEIGHT = 0.33
 
 
-LOOKBACK_WINDOW_SIZE = 60
+LOOKBACK_WINDOW_SIZE = 30
 
 
 # import the necessary packages
@@ -257,8 +257,10 @@ class StockTradingEnv(gym.Env):
             self._render_to_file(kwargs.get('filename', 'render.txt'))
         elif mode == 'plot':
             if self.visualization == None:
+
                 self.visualization = StockTradingGraph(self.df, self.dfvolume, self.action_history, self.net_worths, windows_size=LOOKBACK_WINDOW_SIZE)
             if self.current_step > LOOKBACK_WINDOW_SIZE:
+                print("current step: ", self.current_step)
                 return self.visualization.plot(self.current_step)
 
         else:
