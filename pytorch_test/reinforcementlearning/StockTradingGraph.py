@@ -34,8 +34,11 @@ class StockTradingGraph:
         # Get the data for the current window without the networth column
         start = max(current_step - self.windows_size, 0)
         end = current_step + 1
-        data = self.df.iloc[start:end]
 
+        data = self.df.iloc[start:end]
+        networth = self.net_worth[start-1:end-1]
+
+        #print("check action history: ", self.action_history[0])
         # buy or sell is store in the first element of the action history
         buy = np.array([(-1 <= x) & (x <= -2/3) for x in self.action_history[0]])
         sell = np.array([(1 >= x) & (x >= 2/3) for x in self.action_history[0]])
@@ -45,6 +48,7 @@ class StockTradingGraph:
             # pad the buy and sell array with False to match the length of the data
             buy = np.pad(buy, pad_width=((0, len(data) - len(buy))), mode='constant', constant_values=False)
             sell = np.pad(sell, pad_width=((0, len(data) - len(sell))), mode='constant', constant_values=False)
+        
 
         # create a new column for sell marker position (slightly above the high price when the action history indicates sell)
         sell_marker = data['High'].where(buy)*1.05
@@ -54,7 +58,7 @@ class StockTradingGraph:
         # check if both buy_marker and sell_marker are not null
         if not(buy_marker.isnull().values.any()) and not(sell_marker.isnull().values.any()):
             # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(self.net_worth, type='line', ylabel='Net Worth ($)', panel=2)
+            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
             # add buy marker to subplot
             buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=100, color='green', panel=0)
             # add sell marker to subplot
@@ -70,7 +74,7 @@ class StockTradingGraph:
         # check if buy_marker is not null but sell_marker is null
         elif not(buy_marker.isnull().values.any()) and sell_marker.isnull().values.any():
             # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(self.net_worth, type='line', ylabel='Net Worth ($)', panel=2)
+            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
             # add buy marker to subplot
             buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=100, color='green', panel=0)
 
@@ -84,7 +88,7 @@ class StockTradingGraph:
         # check if sell_marker is not null but buy_marker is null
         elif not(sell_marker.isnull().values.any()) and buy_marker.isnull().values.any():
             # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(self.net_worth, type='line', ylabel='Net Worth ($)', panel=2)
+            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
             # add sell marker to subplot
             sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=100, color='red', panel=0)
 
@@ -97,7 +101,7 @@ class StockTradingGraph:
         
         else:
             # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(self.net_worth, type='line', ylabel='Net Worth ($)', panel=2)
+            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
 
             # create the fig
             fig, axlist = mpf.plot(data, type='candle', addplot=[net_worth_ap], volume=True, 
