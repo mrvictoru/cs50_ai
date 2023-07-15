@@ -25,7 +25,8 @@ class StockTradingGraph:
 
         self.net_worth = net_worth_history
 
-        self.action_history = action_history
+        # the first element of the action history is the buy or sell action
+        self.action_history = [x[0] for x in action_history]
 
         self.windows_size = windows_size
 
@@ -37,23 +38,26 @@ class StockTradingGraph:
 
         data = self.df.iloc[start:end]
         networth = self.net_worth[start-1:end-1]
+        print("check action history len", len(self.action_history))
 
-        #print("check action history: ", self.action_history[0])
         # buy or sell is store in the first element of the action history
-        buy = np.array([(-1 <= x) & (x <= -2/3) for x in self.action_history[0]])
-        sell = np.array([(1 >= x) & (x >= 2/3) for x in self.action_history[0]])
-
+        buy = np.array([(x <= 1) & (x >= 2/3) for x in self.action_history])
+        sell = np.array([(x >= -1) & (x <= -2/3) for x in self.action_history])
+        print("check buy len", len(buy))
+        print("check sell len", len(sell))
         # check if buy and sell match the length of the data
         if len(buy) < len(data):
             # pad the buy and sell array with False to match the length of the data
             buy = np.pad(buy, pad_width=((0, len(data) - len(buy))), mode='constant', constant_values=False)
             sell = np.pad(sell, pad_width=((0, len(data) - len(sell))), mode='constant', constant_values=False)
         
-
+        print("check buy len", len(buy))
+        print("check sell len", len(sell))
+        print("check data len", len(data))
         # create a new column for sell marker position (slightly above the high price when the action history indicates sell)
-        sell_marker = data['High'].where(buy)*1.05
+        buy_marker = data['High'].where(buy)*1.05
         # create a new column for buy marker position (slightly below the low price when the action history indicates buy)
-        buy_marker = data['Low'].where(sell)*0.95
+        sell_marker = data['Low'].where(sell)*0.95
 
         # check if both buy_marker and sell_marker are not null
         if not(buy_marker.isnull().values.any()) and not(sell_marker.isnull().values.any()):
