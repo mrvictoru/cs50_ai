@@ -166,6 +166,7 @@ class StockTradingEnv(gym.Env):
         self.current_step += 1
         self.net_worths.append(self.net_worth)
         self.action_history.append(action)
+
         # calculate reward based on the net worth/balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
         delay_modifier = (self.current_step / self.max_step)
         reward = self.balance * delay_modifier
@@ -240,27 +241,29 @@ class StockTradingEnv(gym.Env):
         file.write(f'Profit: {profit}\n')
         file.write(f'Action: {self.action_history[-1]}\n')
         file.close()
+    
+    def _render_to_print(self):
+        profit = self.net_worth - self.init_balance
+        print(f'Step: {self.current_step}')
+        print(f'Balance: {self.balance}')
+        print(f'Shares held: {self.shares_held} (Total sold: {self.total_shares_sold})')
+        print(f'Avg cost for held shares: {self.cost_basis} (Total sales value: {self.total_sales_value})')
+        print(f'Net worth: {self.net_worth} (Max net worth: {self.max_net_worth})')
+        print(f'Profit: {profit}')
+        # print out the current stock price
+        print(self.df.iloc[self.current_step])
+    
 
     def render(self, mode='None', **kwargs):
         # Render the environment to the screen
-        profit = self.net_worth - self.init_balance
         if mode == 'print':
-            print(f'Step: {self.current_step}')
-            print(f'Balance: {self.balance}')
-            print(f'Shares held: {self.shares_held} (Total sold: {self.total_shares_sold})')
-            print(f'Avg cost for held shares: {self.cost_basis} (Total sales value: {self.total_sales_value})')
-            print(f'Net worth: {self.net_worth} (Max net worth: {self.max_net_worth})')
-            print(f'Profit: {profit}')
-            # print out the current stock price
-            print(self.df.iloc[self.current_step])
+            self._render_to_print()
         elif mode == 'file':
             self._render_to_file(kwargs.get('filename', 'render.txt'))
         elif mode == 'plot':
             if self.visualization == None:
-
                 self.visualization = StockTradingGraph(self.df, self.dfvolume, self.action_history, self.net_worths, windows_size=LOOKBACK_WINDOW_SIZE)
             if self.current_step > LOOKBACK_WINDOW_SIZE:
-                #print("current step: ", self.current_step)
                 return self.visualization.plot(self.current_step)
 
         else:
