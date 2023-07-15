@@ -260,7 +260,7 @@ class StockTradingEnv(gym.Env):
 
                 self.visualization = StockTradingGraph(self.df, self.dfvolume, self.action_history, self.net_worths, windows_size=LOOKBACK_WINDOW_SIZE)
             if self.current_step > LOOKBACK_WINDOW_SIZE:
-                print("current step: ", self.current_step)
+                #print("current step: ", self.current_step)
                 return self.visualization.plot(self.current_step)
 
         else:
