@@ -11,6 +11,7 @@ matplotlib.animation will be used to animate the chart.
 To use this class, create an instance of the class, pass the dataframe with the stock price data,
 When animating, call the animate function with current_step, list of net_worth, list of trades action so far and windows_size
 """
+MARKER_SIZE = 80
 
 import mplfinance as mpf
 import numpy as np
@@ -61,9 +62,9 @@ class StockTradingGraph:
             # add networth line chart to subplot
             net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
             # add buy marker to subplot
-            buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=100, color='green', panel=0)
+            buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=MARKER_SIZE, color='green', panel=0)
             # add sell marker to subplot
-            sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=100, color='red', panel=0)
+            sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=MARKER_SIZE, color='red', panel=0)
 
             # create the fig
             fig, axlist = mpf.plot(data, type='candle', addplot=[net_worth_ap, buy_ap, sell_ap], volume=True, 
@@ -77,7 +78,7 @@ class StockTradingGraph:
             # add networth line chart to subplot
             net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
             # add buy marker to subplot
-            buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=100, color='green', panel=0)
+            buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=MARKER_SIZE, color='green', panel=0)
 
             # create the fig
             fig, axlist = mpf.plot(data, type='candle', addplot=[net_worth_ap, buy_ap], volume=True, 
@@ -91,7 +92,7 @@ class StockTradingGraph:
             # add networth line chart to subplot
             net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
             # add sell marker to subplot
-            sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=100, color='red', panel=0)
+            sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=MARKER_SIZE, color='red', panel=0)
 
             # create the fig
             fig, axlist = mpf.plot(data, type='candle', addplot=[net_worth_ap, sell_ap], volume=True, 

@@ -1,2 +1,3 @@
 pytorch_test/reinforcementlearning/model
 pytorch_test/reinforcementlearning/replaybuffer
+pytorch_test/reinforcementlearning/testenv/
