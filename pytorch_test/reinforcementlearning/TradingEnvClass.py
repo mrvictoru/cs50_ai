@@ -75,7 +75,7 @@ class StockTradingEnv(gym.Env):
     metadata = {'render.modes': ['live', 'file', 'None']}
     visualization = None
 
-    def __init__(self, df, init_balance, max_step, random = True):
+    def __init__(self, df, init_balance, max_step, random=True):
         super(StockTradingEnv, self).__init__()
 
         # data
@@ -99,11 +99,11 @@ class StockTradingEnv(gym.Env):
 
         # action space (buy x%, sell x%, holdclass StockTradingEnv(gym.Env):
 
-        self.action_space = spaces.Box(low=np.array([-1, 0.01]), high=np.array([1, 0.99]), dtype=np.float16)
+        self.action_space = spaces.Box(low=np.array([-1, 0.01]), high=np.array([1, 0.99]), dtype=np.float32)
 
         # observation space (prices and technical indicators)
         # shape should be (n_features + 6) where 6 is the number of additional dynamic features of the environment
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(len(df.columns)+6,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(len(df.columns) + 6,), dtype=np.float32)
 
     # reset the state of the environment to an initial state
     def reset(self):

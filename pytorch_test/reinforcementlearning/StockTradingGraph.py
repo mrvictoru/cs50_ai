@@ -53,9 +53,9 @@ class StockTradingGraph:
 
 
         # create a new column for sell marker position (slightly above the high price when the action history indicates sell)
-        buy_marker = data['Low'].where(buy)*1.0005
+        buy_marker = data['Low'].where(buy)*0.995
         # create a new column for buy marker position (slightly below the low price when the action history indicates buy)
-        sell_marker = data['High'].where(sell)*0.9995
+        sell_marker = data['High'].where(sell)*1.005
 
         # check if both buy_marker and sell_marker are not null
         if not(buy_marker.isnull().values.all()) and not(sell_marker.isnull().values.all()):
@@ -66,12 +66,9 @@ class StockTradingGraph:
             # add sell marker to subplot
             sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=MARKER_SIZE, color='red', panel=0)
 
+            aplist = [net_worth_ap, buy_ap, sell_ap]
             # create the fig
-            fig, axlist = mpf.plot(data, type='candle', addplot=[net_worth_ap, buy_ap, sell_ap], volume=True, 
-                                returnfig=True, volume_panel=1, style='yahoo')
 
-            # return the fig
-            return fig
         
         # check if buy_marker is not null but sell_marker is null
         elif not(buy_marker.isnull().values.all()) and sell_marker.isnull().values.all():
@@ -80,12 +77,7 @@ class StockTradingGraph:
             # add buy marker to subplot
             buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=MARKER_SIZE, color='green', panel=0)
 
-            # create the fig
-            fig, axlist = mpf.plot(data, type='candle', addplot=[net_worth_ap, buy_ap], volume=True, 
-                                returnfig=True, volume_panel=1, style='yahoo')
-
-            # return the fig
-            return fig
+            aplist = [net_worth_ap, buy_ap]
         
         # check if sell_marker is not null but buy_marker is null
         elif not(sell_marker.isnull().values.all()) and buy_marker.isnull().values.all():
@@ -94,21 +86,17 @@ class StockTradingGraph:
             # add sell marker to subplot
             sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=MARKER_SIZE, color='red', panel=0)
 
-            # create the fig
-            fig, axlist = mpf.plot(data, type='candle', addplot=[net_worth_ap, sell_ap], volume=True, 
-                                returnfig=True, volume_panel=1, style='yahoo')
-
-            # return the fig
-            return fig
+            aplist = [net_worth_ap, sell_ap]
         
         else:
             # add networth line chart to subplot
             net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
 
-            # create the fig
-            fig, axlist = mpf.plot(data, type='candle', addplot=[net_worth_ap], volume=True, 
-                                returnfig=True, volume_panel=1, style='yahoo')
+            aplist = [net_worth_ap]
+        
+        fig, axlist = mpf.plot(data, type='candle', addplot=aplist, volume=True, 
+                    returnfig=True, volume_panel=1, style='yahoo', datetime_format='%y-%m-%d', panel_ratios = (3,1,1), panel_spacing=1)
 
-            # return the fig
-            return fig
+        # return the fig
+        return fig
 
