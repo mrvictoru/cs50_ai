@@ -60,7 +60,7 @@ class StockTradingGraph:
         # check if both buy_marker and sell_marker are not null
         if not(buy_marker.isnull().values.all()) and not(sell_marker.isnull().values.all()):
             # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
+            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2, title='Net Worth')
             # add buy marker to subplot
             buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=MARKER_SIZE, color='green', panel=0)
             # add sell marker to subplot
@@ -73,7 +73,7 @@ class StockTradingGraph:
         # check if buy_marker is not null but sell_marker is null
         elif not(buy_marker.isnull().values.all()) and sell_marker.isnull().values.all():
             # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
+            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2, title='Net Worth')
             # add buy marker to subplot
             buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=MARKER_SIZE, color='green', panel=0)
 
@@ -82,7 +82,7 @@ class StockTradingGraph:
         # check if sell_marker is not null but buy_marker is null
         elif not(sell_marker.isnull().values.all()) and buy_marker.isnull().values.all():
             # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
+            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2, title='Net Worth')
             # add sell marker to subplot
             sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=MARKER_SIZE, color='red', panel=0)
 
@@ -90,12 +90,12 @@ class StockTradingGraph:
         
         else:
             # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2)
+            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2, title='Net Worth')
 
             aplist = [net_worth_ap]
         
         fig, axlist = mpf.plot(data, type='candle', addplot=aplist, volume=True, 
-                    returnfig=True, volume_panel=1, style='yahoo', datetime_format='%y-%m-%d', panel_ratios = (3,1,1), panel_spacing=1)
+                    returnfig=True, volume_panel=1, style='yahoo', datetime_format='%y-%m-%d', panel_ratios = (3,1,1))
 
         # return the fig
         return fig

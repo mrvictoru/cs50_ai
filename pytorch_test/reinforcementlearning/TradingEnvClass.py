@@ -92,7 +92,7 @@ class StockTradingEnv(gym.Env):
         # normalize the data
         self.price_mean = self.df['Close'].mean()
         self.price_std = self.df['Close'].std()
-        self.df_standard = (df - df.mean()) / df.std()
+        self.df_standard = (self.df - self.df.mean()) / self.df.std()
 
         # trade action history
         self.action_history = []
@@ -103,7 +103,7 @@ class StockTradingEnv(gym.Env):
 
         # observation space (prices and technical indicators)
         # shape should be (n_features + 6) where 6 is the number of additional dynamic features of the environment
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(len(df.columns) + 6,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(len(self.df.columns) + 6,), dtype=np.float32)
 
     # reset the state of the environment to an initial state
     def reset(self):
