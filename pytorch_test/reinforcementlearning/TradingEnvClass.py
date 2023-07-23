@@ -131,7 +131,7 @@ class StockTradingEnv(gym.Env):
         # append additional data
         obs = np.append(frame, [
             self.balance,
-            self.max_net_worth,
+            self.net_worth,
             self.shares_held,
             self.cost_basis,
             self.total_shares_sold,
@@ -148,7 +148,7 @@ class StockTradingEnv(gym.Env):
         # append additional data
         obs = np.append(frame, [
             self.balance/MAX_ACCOUNT_BALANCE,
-            self.max_net_worth/MAX_ACCOUNT_BALANCE,
+            self.net_worth/MAX_ACCOUNT_BALANCE,
             self.shares_held/MAX_NUM_SHARES,
             (self.cost_basis - self.price_mean)/self.price_std,
             self.total_shares_sold/MAX_NUM_SHARES,
