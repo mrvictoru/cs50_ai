@@ -169,10 +169,10 @@ class StockTradingEnv(gym.Env):
 
         # calculate reward based on the net worth/balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
         delay_modifier = (self.current_step / self.max_step)
-        reward = self.balance * delay_modifier
+        reward = self.net_worth * delay_modifier
         # reward = self.net_worth * delay_modifier 
         # if net_worth is below 0, or current_step is greater than max_step, then environment terminates
-        done = self.net_worth <= 0 or self.current_step >= self.max_step
+        done = self.net_worth <= 0 or self.current_step >= self.max_step or self.balance <= 0
 
         obs = self._next_observation_norm()
 
