@@ -16,6 +16,10 @@ UP_TEXT_COLOR = '#73D3CC'
 DOWN_TEXT_COLOR = '#DC2C27'
 VOLUME_CHART_HEIGHT = 0.33
 
+# constant for reward function
+ALPHA = 1
+BETA = 1
+
 
 LOOKBACK_WINDOW_SIZE = 30
 
@@ -170,8 +174,8 @@ class StockTradingEnv(gym.Env):
         # calculate reward based on the net worth/balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
         # the modifier should be between 0.5 and 1, where toward the start of the episode it is closer to 0.5 and towards the end it is closer to 1
         delay_modifier = 0.5 + 0.5 * (self.current_step / self.max_step)
-        # TODO: change the reward function so that agent can take into other factors
-        reward = self.net_worth * delay_modifier
+        # reward function reward networth going up and penalize buying stock with high cost basis
+        reward = (self.net_worth - self.net_worths[-2])  * delay_modifier * ALPHA - self.cost_basis * BETA 
         
         # if net_worth is below 0, or current_step is greater than max_step, then environment terminates
         done = self.net_worth <= 0 or self.current_step >= self.max_step or self.balance <= 0
@@ -227,6 +231,7 @@ class StockTradingEnv(gym.Env):
         if self.net_worth > self.max_net_worth:
             self.max_net_worth = self.net_worth
 
+        # reset cost basis to 0 if no more shares held
         if self.shares_held == 0:
             self.cost_basis = 0
           
