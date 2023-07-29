@@ -175,7 +175,10 @@ class StockTradingEnv(gym.Env):
         # the modifier should be between 0.5 and 1, where toward the start of the episode it is closer to 0.5 and towards the end it is closer to 1
         delay_modifier = 0.5 + 0.5 * (self.current_step / self.max_step)
         # reward function reward networth going up and penalize buying stock with high cost basis
-        reward = (self.net_worth - self.net_worths[-2])  * delay_modifier * ALPHA - self.cost_basis * BETA 
+        if len(self.net_worths) < 2:
+            reward = 0
+        else:
+            reward = (self.net_worth - self.net_worths[-2])  * delay_modifier * ALPHA - self.cost_basis * BETA 
         
         # if net_worth is below 0, or current_step is greater than max_step, then environment terminates
         done = self.net_worth <= 0 or self.current_step >= self.max_step or self.balance <= 0
