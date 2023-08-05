@@ -170,6 +170,7 @@ class StockTradingEnv(gym.Env):
         # Set the execute_price to the closing price of the time step
         execute_price = self.df.iloc[self.current_step]["Close"]
         # Execute one time step within the environment
+        # an extra check is added to not execute inappropriate action such as buying when balance is not enough or selling when there is no stock held
         action_taken = self._take_action(action,execute_price)
         self.current_step += 1
         self.net_worths.append(self.net_worth)
@@ -178,14 +179,14 @@ class StockTradingEnv(gym.Env):
         # calculate reward based on the net worth/balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
         # the modifier should be between 0.5 and 1, where toward the start of the episode it is closer to 0.5 and towards the end it is closer to 1
         delay_modifier = 0.5 + 0.5 * (self.current_step / self.max_step)
-        # reward function reward networth going up and penalize buying stock with high cost basis
+        # reward function reward networth going up and penalize buying stock with high cost basis as well as inappropriate action
         if len(self.net_worths) < 2:
             reward = 0
         else:
             reward = (self.net_worth - self.net_worths[-2])  * delay_modifier * ALPHA - self.cost_basis * BETA - action_taken[2] * GAMMA
         
         # if net_worth is below 0, or current_step is greater than max_step, then environment terminates
-        done = self.net_worth <= 0 or self.current_step >= self.max_step or self.balance <= 0
+        done = self.net_worth < 0 or self.current_step >= self.max_step or self.balance < 0
 
         obs = self._next_observation_norm()
 
@@ -213,6 +214,10 @@ class StockTradingEnv(gym.Env):
 
             prev_cost = self.cost_basis * self.shares_held
             additional_cost = shares_bought * execute_price
+            
+            if self.balance < additional_cost:
+                shares_bought = 0
+                additional_cost = 0
 
             self.balance -= additional_cost
             # calculate the new cost basis, check if it is divide by zero, if it is then set it to the execute price
@@ -222,8 +227,12 @@ class StockTradingEnv(gym.Env):
                 self.cost_basis = (prev_cost + additional_cost) / (self.shares_held + shares_bought)
             
             self.shares_held += shares_bought
-            # change action taken to 1 to indicate buy and the amount of shares bought
-            action_taken = [1, shares_bought, 0]
+
+            if shares_bought > 0:
+                # change action taken to 1 to indicate buy and the amount of shares bought
+                action_taken = [1, shares_bought, 0]
+            else :
+                action_taken = [0, shares_bought, 1]
 
 
         elif -1 <= action_type <= -2/3:
@@ -242,7 +251,7 @@ class StockTradingEnv(gym.Env):
             if shares_sold > 0:
                 action_taken = [-1, shares_sold, 0]
             else:
-                action_taken = [0, 0, 1]
+                action_taken = [0, shares_sold, 1]
             
 
         self.net_worth = self.balance + self.shares_held * execute_price
