@@ -22,7 +22,7 @@ ALPHA = 1
 # BETA is the penalty for buying stock with high cost basis
 BETA = 1
 # GAMMA is the penalty for selling stock when there is no stock held
-GAMMA = 1000
+GAMMA = 100
 
 
 LOOKBACK_WINDOW_SIZE = 30
