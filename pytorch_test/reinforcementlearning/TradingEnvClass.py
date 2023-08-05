@@ -166,10 +166,10 @@ class StockTradingEnv(gym.Env):
         # Set the execute_price to the closing price of the time step
         execute_price = self.df.iloc[self.current_step]["Close"]
         # Execute one time step within the environment
-        self._take_action(action,execute_price)
+        action_taken = self._take_action(action,execute_price)
         self.current_step += 1
         self.net_worths.append(self.net_worth)
-        self.action_history.append(action)
+        self.action_history.append(action_taken)
 
         # calculate reward based on the net worth/balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
         # the modifier should be between 0.5 and 1, where toward the start of the episode it is closer to 0.5 and towards the end it is closer to 1
@@ -192,6 +192,7 @@ class StockTradingEnv(gym.Env):
 
         action_type = action[0]
         amount = action[1]
+        action_taken = [0,0]
 
         # check if action_type between 2/3 and 1 then it is to buy
         if 2/3 <= action_type <= 1:
@@ -215,6 +216,8 @@ class StockTradingEnv(gym.Env):
                 self.cost_basis = (prev_cost + additional_cost) / (self.shares_held + shares_bought)
             
             self.shares_held += shares_bought
+            # change action taken to 1 to indicate buy and the amount of shares bought
+            action_taken = [1, shares_bought]
 
 
         elif -1 <= action_type <= -2/3:
@@ -227,6 +230,8 @@ class StockTradingEnv(gym.Env):
             self.shares_held -= shares_sold
             self.total_shares_sold += shares_sold
             self.total_sales_value += shares_sold * execute_price
+            # change action taken to -1 to indicate sell and the amount of shares sold
+            action_taken = [-1, shares_sold]
             
 
         self.net_worth = self.balance + self.shares_held * execute_price
@@ -237,6 +242,8 @@ class StockTradingEnv(gym.Env):
         # reset cost basis to 0 if no more shares held
         if self.shares_held == 0:
             self.cost_basis = 0
+        
+        return action_taken
           
     # see https://towardsdatascience.com/visualizing-stock-trading-agents-using-matplotlib-and-gym-584c992bc6d4        
     def _render_to_file(self, filename='render.txt'):
