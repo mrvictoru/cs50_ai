@@ -17,8 +17,12 @@ DOWN_TEXT_COLOR = '#DC2C27'
 VOLUME_CHART_HEIGHT = 0.33
 
 # constant for reward function
+# ALPHA is the reward for networth going up
 ALPHA = 1
+# BETA is the penalty for buying stock with high cost basis
 BETA = 1
+# GAMMA is the penalty for selling stock when there is no stock held
+GAMMA = 1000
 
 
 LOOKBACK_WINDOW_SIZE = 30
@@ -178,7 +182,7 @@ class StockTradingEnv(gym.Env):
         if len(self.net_worths) < 2:
             reward = 0
         else:
-            reward = (self.net_worth - self.net_worths[-2])  * delay_modifier * ALPHA - self.cost_basis * BETA 
+            reward = (self.net_worth - self.net_worths[-2])  * delay_modifier * ALPHA - self.cost_basis * BETA - action_taken[2] * GAMMA
         
         # if net_worth is below 0, or current_step is greater than max_step, then environment terminates
         done = self.net_worth <= 0 or self.current_step >= self.max_step or self.balance <= 0
@@ -192,7 +196,9 @@ class StockTradingEnv(gym.Env):
 
         action_type = action[0]
         amount = action[1]
-        action_taken = [0,0]
+        # action taken has three elements, the first element is the action type, the second element is the amount of shares bought or sold, the third element being inappropriate action
+        # inappropriate action is 1 if the action is to buy but the balance is not enough, or the action is to sell but the shares held is not enough
+        action_taken = [0,0,0]
 
         # check if action_type between 2/3 and 1 then it is to buy
         if 2/3 <= action_type <= 1:
@@ -217,21 +223,26 @@ class StockTradingEnv(gym.Env):
             
             self.shares_held += shares_bought
             # change action taken to 1 to indicate buy and the amount of shares bought
-            action_taken = [1, shares_bought]
+            action_taken = [1, shares_bought, 0]
 
 
         elif -1 <= action_type <= -2/3:
             # sell amount % of shares held (rounded to interger)
             shares_sold = int(self.shares_held * amount)
             # if shares sold is 0 then make it one unless we have no shares
-            if shares_sold < 1:
+            if shares_sold < 1 and self.shares_held > 0:
                 shares_sold = 1
+            else :
+                shares_sold = 0
             self.balance += shares_sold * execute_price
             self.shares_held -= shares_sold
             self.total_shares_sold += shares_sold
             self.total_sales_value += shares_sold * execute_price
             # change action taken to -1 to indicate sell and the amount of shares sold
-            action_taken = [-1, shares_sold]
+            if shares_sold > 0:
+                action_taken = [-1, shares_sold, 0]
+            else:
+                action_taken = [0, 0, 1]
             
 
         self.net_worth = self.balance + self.shares_held * execute_price
