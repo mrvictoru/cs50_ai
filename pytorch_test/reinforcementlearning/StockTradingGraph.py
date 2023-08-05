@@ -41,10 +41,14 @@ class StockTradingGraph:
         networth = self.net_worth[start-1:end-1]        
         act_history = self.action_history[start-1:end-1]
 
-        # buy or sell is store in the first element of the action history
-        buy = np.array([(x[0] <= 1) & (x[0] >= 2/3) for x in act_history])
-        sell = np.array([(x[0] >= -1) & (x[0] <= -2/3) for x in act_history])
+        # buy (1) or sell(-1) is store in the first element of the action history
+        buy = np.array([(x[0] == 1) for x in act_history])
+        sell = np.array([(x[0] == -1) for x in act_history])
+        amount = np.array([x[1] for x in act_history])
 
+        colors = np.where(buy, 'g', np.where(sell, 'r', 'w'))
+        amountap = mpf.make_addplot(amount, type='bar', panel=1, ylabel='Amount', color=colors)
+        
         # check if buy and sell match the length of the data
         if len(buy) < len(data):
             # pad the buy and sell array with False to match the length of the data
@@ -57,45 +61,40 @@ class StockTradingGraph:
         # create a new column for buy marker position (slightly below the low price when the action history indicates buy)
         sell_marker = data['High'].where(sell)*1.005
 
+        aplist = []
+        # add subplot for networth
+        aplist.append(mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2, title='Net Worth'))
+        aplist.append(amountap)
         # check if both buy_marker and sell_marker are not null
         if not(buy_marker.isnull().values.all()) and not(sell_marker.isnull().values.all()):
-            # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2, title='Net Worth')
+
             # add buy marker to subplot
             buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=MARKER_SIZE, color='green', panel=0)
             # add sell marker to subplot
             sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=MARKER_SIZE, color='red', panel=0)
 
-            aplist = [net_worth_ap, buy_ap, sell_ap]
-            # create the fig
-
+            aplist.append(buy_ap)
+            aplist.append(sell_ap)
         
         # check if buy_marker is not null but sell_marker is null
         elif not(buy_marker.isnull().values.all()) and sell_marker.isnull().values.all():
-            # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2, title='Net Worth')
+
             # add buy marker to subplot
             buy_ap = mpf.make_addplot(buy_marker, type='scatter', marker='^', markersize=MARKER_SIZE, color='green', panel=0)
 
-            aplist = [net_worth_ap, buy_ap]
+            aplist.append(buy_ap)
         
         # check if sell_marker is not null but buy_marker is null
         elif not(sell_marker.isnull().values.all()) and buy_marker.isnull().values.all():
-            # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2, title='Net Worth')
+
             # add sell marker to subplot
             sell_ap = mpf.make_addplot(sell_marker, type='scatter', marker='v', markersize=MARKER_SIZE, color='red', panel=0)
 
-            aplist = [net_worth_ap, sell_ap]
-        
-        else:
-            # add networth line chart to subplot
-            net_worth_ap = mpf.make_addplot(networth, type='line', ylabel='Net Worth ($)', panel=2, title='Net Worth')
+            aplist.append(sell_ap)
 
-            aplist = [net_worth_ap]
         
-        fig, axlist = mpf.plot(data, type='candle', addplot=aplist, volume=True, 
-                    returnfig=True, volume_panel=1, style='yahoo', datetime_format='%y-%m-%d', panel_ratios = (3,1,1))
+        fig, axlist = mpf.plot(data, type='candle', addplot=aplist, 
+                    returnfig=True, style='yahoo', datetime_format='%y-%m-%d', panel_ratios = (3,1,1))
 
         # return the fig
         return fig
