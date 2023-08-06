@@ -124,6 +124,7 @@ class StockTradingEnv(gym.Env):
         self.total_sales_value = 0
         self.action_history = []
         self.net_worths = []
+        self.balance_history = []
         
         if self.random:
             # set the current step to a random point within the data frame
@@ -174,6 +175,7 @@ class StockTradingEnv(gym.Env):
         action_taken = self._take_action(action,execute_price)
         self.current_step += 1
         self.net_worths.append(self.net_worth)
+        self.balance_history.append(self.balance)
         self.action_history.append(action_taken)
 
         # calculate reward based on the net worth/balance with a delay modifier. which bias towards having a higher balance towards the end of the episode
@@ -181,9 +183,16 @@ class StockTradingEnv(gym.Env):
         delay_modifier = 0.5 + 0.5 * (self.current_step / self.max_step)
         # reward function reward networth going up and penalize buying stock with high cost basis as well as inappropriate action
         if len(self.net_worths) < 2:
-            reward = 0
+            reward_costbasis = - self.cost_basis * BETA
+            reward_inappropriate = - action_taken[2] * GAMMA
+            reward = reward_costbasis + reward_inappropriate
         else:
-            reward = (self.net_worth - self.net_worths[-2])  * delay_modifier * ALPHA - self.cost_basis * BETA - action_taken[2] * GAMMA
+
+            reward_networth = (self.net_worth - self.net_worths[-2])  * delay_modifier * ALPHA
+            reward_balance = (self.balance - self.balance_history[-2]) * delay_modifier * ALPHA
+            reward_costbasis = - self.cost_basis * BETA
+            reward_inappropriate = - action_taken[2] * GAMMA
+            reward = reward_networth + reward_balance + reward_costbasis + reward_inappropriate
         
         # if net_worth is below 0, or current_step is greater than max_step, then environment terminates
         done = self.net_worth < 0 or self.current_step >= self.max_step or self.balance < 0
