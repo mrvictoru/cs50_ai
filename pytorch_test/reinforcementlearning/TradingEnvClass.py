@@ -35,8 +35,6 @@ from gym import spaces, error, utils
 
 import numpy as np
 import pandas as pd
-import matplotlib.animation as animation
-import sys
 
 # helper function to get stock data
 from getstock import *
